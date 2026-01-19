@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>UU EEE Dept App (Online Only)</title>
+    <title>UU EEE Dept App (Pro)</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
     <style>
@@ -17,117 +17,72 @@
             --notice-bg: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         }
 
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            margin: 0; padding: 0; padding-bottom: 80px;
-            background-color: var(--bg-color); color: #333;
-        }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0 0 80px; background: var(--bg-color); color: #333; }
 
         /* Header */
-        header {
-            background: linear-gradient(to right, #203a43, #2c5364);
-            color: var(--text-light); padding: 15px; text-align: center;
-            border-bottom: 4px solid var(--accent-color); position: relative;
-        }
-        header h1 { margin: 0; font-size: 1.4rem; letter-spacing: 1px; }
-        header p { margin: 5px 0 0; font-size: 0.9rem; opacity: 0.9; }
-
-        /* Loader Overlay */
-        #loader { 
-            display: flex; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-            background: rgba(255,255,255,0.95); z-index: 9999; 
-            justify-content: center; align-items: center; flex-direction: column;
-        }
-        .spinner { 
-            border: 5px solid #f3f3f3; border-top: 5px solid var(--accent-color); 
-            border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; 
-        }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        header { background: linear-gradient(to right, #203a43, #2c5364); color: var(--text-light); padding: 15px; text-align: center; border-bottom: 4px solid var(--accent-color); position: relative; }
         
-        /* Status Bar */
-        #connection-status {
-            background: #27ae60; color: white; text-align: center; font-size: 0.8rem; padding: 2px;
-            display: none; /* Hidden by default, shown on success */
-        }
+        /* Loader */
+        #loader { display: flex; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.95); z-index: 9999; justify-content: center; align-items: center; flex-direction: column; }
+        .spinner { border: 5px solid #f3f3f3; border-top: 5px solid var(--accent-color); border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
         /* Admin Toggle */
-        #admin-toggle {
-            position: absolute; top: 15px; right: 15px;
-            background: rgba(255,255,255,0.2); color: white; border: 1px solid white; 
-            padding: 4px 8px; cursor: pointer; border-radius: 4px; font-size: 0.7rem;
-        }
+        #admin-toggle { position: absolute; top: 15px; right: 15px; background: rgba(255,255,255,0.2); color: white; border: 1px solid white; padding: 4px 8px; cursor: pointer; border-radius: 4px; font-size: 0.7rem; }
 
-        /* Bottom Nav */
-        nav {
-            display: flex; justify-content: flex-start;
-            background-color: var(--primary-color); padding: 8px 0;
-            position: fixed; bottom: 0; width: 100%; z-index: 1000;
-            box-shadow: 0 -2px 10px rgba(0,0,0,0.2);
-            overflow-x: auto; white-space: nowrap;
-        }
+        /* Navigation */
+        nav { display: flex; justify-content: flex-start; background-color: var(--primary-color); padding: 8px 0; position: fixed; bottom: 0; width: 100%; z-index: 1000; box-shadow: 0 -2px 10px rgba(0,0,0,0.2); overflow-x: auto; white-space: nowrap; }
         nav::-webkit-scrollbar { display: none; }
-        nav button {
-            background: none; border: none; color: #bdc3c7;
-            font-size: 0.65rem; cursor: pointer; padding: 5px 15px;
-            display: flex; flex-direction: column; align-items: center; min-width: 65px; flex-shrink: 0;
-        }
+        nav button { background: none; border: none; color: #bdc3c7; font-size: 0.65rem; cursor: pointer; padding: 5px 15px; display: flex; flex-direction: column; align-items: center; min-width: 65px; flex-shrink: 0; }
         nav button span { font-size: 1.2rem; margin-bottom: 3px; }
         nav button.active { color: var(--accent-color); font-weight: bold; }
 
-        /* Sections */
+        /* Content & Forms */
         .content-section { display: none; padding: 15px; max-width: 800px; margin: 0 auto; animation: fadeIn 0.4s; }
         .content-section.active-section { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* Forms */
         .admin-form { display: none; background: white; padding: 15px; margin-bottom: 20px; border-radius: 8px; border-left: 5px solid var(--accent-color); box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
         .admin-form input, .admin-form select, .admin-form textarea { padding: 10px; margin: 5px 0; width: 90%; border: 1px solid #ddd; border-radius: 4px; }
         .admin-form button { background: var(--secondary-color); color: var(--accent-color); border: none; padding: 10px; margin-top: 10px; width: 100%; font-weight: bold; cursor: pointer; }
 
         /* UI Elements */
         .section-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #ddd; padding-bottom: 5px; margin-bottom: 15px; }
-        h2 { color: var(--secondary-color); margin: 0; }
         .print-btn { background: #34495e; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 0.8rem; }
-        .delete-btn { background: #e74c3c; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor:pointer; font-size: 0.8rem;}
-        .edit-btn { background: #f39c12; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor:pointer; font-size: 0.8rem; margin-right: 5px; }
+        .delete-btn { background: #e74c3c; color: white; border: none; padding: 4px 8px; border-radius: 4px; display: none; margin-left: auto; cursor:pointer; font-size:0.8rem;}
+        .edit-btn { background: #f39c12; color: white; border: none; padding: 4px 8px; border-radius: 4px; display: none; margin-right: 5px; cursor:pointer; font-size:0.8rem;}
         
-        /* Tables & Cards */
         table { width: 100%; border-collapse: collapse; background: white; margin-top: 10px; font-size: 0.9rem; }
         th { background-color: var(--secondary-color); color: var(--accent-color); padding: 10px; text-align: left; }
         td { padding: 10px; border-bottom: 1px solid #ddd; }
-        .card { background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); border-top: 3px solid var(--secondary-color); display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; position: relative;}
+        
+        .card { background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); border-top: 3px solid var(--secondary-color); margin-bottom: 10px; position: relative;}
 
-        /* Student Profile UI */
+        /* --- FEATURES UI --- */
+        /* Dashboard */
+        .notice-banner { background: var(--notice-bg); color: white; padding: 20px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(118, 75, 162, 0.4); }
+        .nb-date { background: rgba(255,255,255,0.2); padding: 2px 8px; border-radius: 20px; font-size: 0.8rem; }
+        .nb-title { font-size: 1.3rem; font-weight: bold; margin: 10px 0 5px; display: block; }
+        .activity-feed { margin-bottom: 30px; display: flex; flex-direction: column; gap: 10px; }
+        .act-card { padding: 15px; border-radius: 8px; color: white; cursor: pointer; background: linear-gradient(135deg, #f39c12, #d35400); }
+
+        /* Student */
         .student-card-content { display: flex; align-items: center; }
         .student-img { width: 60px; height: 60px; border-radius: 50%; object-fit: cover; border: 2px solid var(--accent-color); margin-right: 15px; background: #eee; }
         .phone-link { color: #2980b9; font-weight: bold; cursor: pointer; text-decoration: underline; }
 
-        /* Notice Banner */
-        .notice-banner { background: var(--notice-bg); color: white; padding: 20px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(118, 75, 162, 0.4); }
-        .nb-date { background: rgba(255,255,255,0.2); padding: 2px 8px; border-radius: 20px; font-size: 0.8rem; }
-        .nb-title { font-size: 1.3rem; font-weight: bold; margin: 10px 0 5px; display: block; }
-
+        /* Academic & Marks */
+        .subject-card { background: white; padding: 15px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); border-left: 5px solid var(--secondary-color); }
+        .progress-bar { height: 100%; background: linear-gradient(90deg, var(--secondary-color), var(--accent-color)); width: 0%; transition: width 0.5s; }
+        .marks-container { display: none; margin-top: 15px; background: #f8f9fa; padding: 10px; border-radius: 8px; border: 1px dashed #bdc3c7; }
+        .marks-input { width: 40px; padding: 4px; text-align: center; border: 1px solid #ddd; border-radius: 4px; font-size: 0.8rem;}
+        
         /* Polls */
         .poll-card { background: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
         .poll-bar { height: 100%; background: rgba(255, 193, 7, 0.2); transition: width 0.5s ease; position: absolute; left: 0; top: 0; }
         .poll-option { background: #f8f9fa; border: 1px solid #ddd; padding: 10px; margin-bottom: 8px; border-radius: 6px; cursor: pointer; position: relative; overflow: hidden; }
         .poll-text { position: relative; z-index: 1; display: flex; justify-content: space-between; }
-        .poll-voted .poll-option { cursor: not-allowed; opacity: 0.8; }
-        .voted-badge { background: #27ae60; color: white; font-size: 0.7rem; padding: 2px 6px; border-radius: 4px; float: right; }
-
-        /* Dashboard */
-        .activity-feed { margin-bottom: 30px; display: flex; flex-direction: column; gap: 10px; }
-        .act-card { padding: 15px; border-radius: 8px; color: white; position: relative; overflow: hidden; cursor: pointer;}
-        .act-notice { background: linear-gradient(135deg, #e74c3c, #c0392b); }
-        .act-poll { background: linear-gradient(135deg, #f39c12, #d35400); }
-        .act-attend { background: linear-gradient(135deg, #27ae60, #2ecc71); }
-
-        /* Academic */
-        .subject-card { background: white; padding: 15px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); border-left: 5px solid var(--secondary-color); }
-        .progress-bar { height: 100%; background: linear-gradient(90deg, var(--secondary-color), var(--accent-color)); width: 0%; transition: width 0.5s; }
-        .marks-container { display: none; margin-top: 15px; background: #f8f9fa; padding: 10px; border-radius: 8px; border: 1px dashed #bdc3c7; }
-        .marks-input { width: 40px; padding: 4px; text-align: center; border: 1px solid #ddd; border-radius: 4px; font-size: 0.8rem;}
-        .link-btn { background: #3498db; color: white; text-decoration: none; padding: 5px 10px; border-radius: 4px; font-size: 0.8rem; display: inline-block; }
+        .poll-voted .poll-option { opacity: 0.7; cursor: not-allowed; }
 
     </style>
 </head>
@@ -135,11 +90,9 @@
 
     <div id="loader">
         <div class="spinner"></div>
-        <p style="margin-top:10px; font-weight:bold; color:#0f2027;">Connecting to Server...</p>
-        <button onclick="location.reload()" style="margin-top:20px; padding:5px 10px; cursor:pointer;">Retry</button>
+        <p style="margin-top:15px; font-weight:bold;">Connecting to Server...</p>
+        <button onclick="location.reload()" style="margin-top:10px; padding:5px 10px; cursor:pointer;">Retry</button>
     </div>
-
-    <div id="connection-status">🟢 Connected to Server</div>
 
     <header>
         <h1>Uttara University</h1>
@@ -149,7 +102,7 @@
 
     <div id="home" class="content-section active-section">
         <div class="section-header"><h2>🔥 Latest Updates</h2></div>
-        <div id="activity-feed" class="activity-feed"></div>
+        <div id="activity-feed"></div>
 
         <div class="section-header">
             <h2>📅 Class Routine</h2>
@@ -158,7 +111,7 @@
         
         <div class="admin-form">
             <h3>Add Class</h3>
-            <input type="text" id="r-day" placeholder="Day">
+            <input type="text" id="r-day" placeholder="Day (e.g. Sunday)">
             <input type="text" id="r-sub" placeholder="Subject">
             <input type="text" id="r-room" placeholder="Room">
             <button onclick="addRoutine()">➕ Add Routine</button>
@@ -172,46 +125,44 @@
 
     <div id="academic" class="content-section">
         <div class="admin-form">
-            <h3>Add Course/Resource</h3>
+            <h3>Add Course</h3>
             <input type="text" id="sub-name" placeholder="Subject Name">
             <input type="text" id="sub-code" placeholder="Code">
-            <input type="text" id="sub-link" placeholder="Link">
+            <input type="text" id="sub-link" placeholder="Syllabus Link">
             <button onclick="addSubject()">Add Course</button>
             <hr>
-            <input type="text" id="res-title" placeholder="Resource Title">
-            <input type="text" id="res-url" placeholder="Resource Link">
+            <h3>Add Resource</h3>
+            <input type="text" id="res-title" placeholder="Title">
+            <input type="text" id="res-url" placeholder="Link">
             <button onclick="addResource()">Add Resource</button>
         </div>
-        <h2>📘 Active Courses</h2>
+        
+        <h2>📘 Active Courses & Marks</h2>
         <div id="course-list"></div>
-        <h2 style="margin-top: 30px;">📚 Resources</h2>
+
+        <h2 style="margin-top:30px;">📚 General Resources</h2>
         <div id="resource-list"></div>
     </div>
 
     <div id="students" class="content-section">
         <div class="admin-form" id="student-form">
             <h3>🎓 Manage Student</h3>
-            <input type="file" id="s-img-file" accept="image/*" style="margin-bottom:10px;">
+            <input type="file" id="s-img-file" accept="image/*" style="margin-bottom:5px;">
             <input type="text" id="s-name" placeholder="Name">
             <input type="text" id="s-id" placeholder="ID">
             <input type="text" id="s-dip" placeholder="Dip. Session (e.g. 19-20)">
             <input type="text" id="s-phone" placeholder="Phone">
             <button id="btn-student-action" onclick="handleStudentSubmit()">➕ Add Student</button>
-            <button onclick="resetStudentForm()" style="background:#7f8c8d; width:auto; margin-top:5px;">Cancel</button>
+            <button onclick="resetStudentForm()" style="background:#7f8c8d; width:auto;">Cancel</button>
         </div>
-        
-        <div class="section-header">
-            <h2>🎓 Student List</h2> 
-            <button class="print-btn" onclick="downloadGeneralPDF('student-list', 'Student_List')">🖨️ PDF</button>
-        </div>
+        <div class="section-header"><h2>🎓 Student List</h2><button class="print-btn" onclick="downloadGeneralPDF('student-list', 'Student_List')">🖨️ PDF</button></div>
         <div id="student-list"></div>
     </div>
 
     <div id="teachers" class="content-section">
         <div class="admin-form">
-            <h3>Add Teacher</h3>
             <input type="text" id="t-name" placeholder="Name"><input type="text" id="t-post" placeholder="Post"><input type="text" id="t-phone" placeholder="Phone">
-            <button onclick="addTeacher()">➕ Add Teacher</button>
+            <button onclick="addTeacher()">Add Teacher</button>
         </div>
         <div class="section-header"><h2>👨‍🏫 Faculty</h2><button class="print-btn" onclick="downloadGeneralPDF('teacher-list', 'Faculty_List')">🖨️ PDF</button></div>
         <div id="teacher-list"></div>
@@ -219,35 +170,30 @@
 
     <div id="notice" class="content-section">
         <div class="admin-form">
-            <h3>Post Notice</h3>
             <input type="date" id="n-date"><input type="text" id="n-title" placeholder="Title"><input type="text" id="n-desc" placeholder="Details">
-            <button onclick="addNotice()">📢 Post Notice</button>
+            <button onclick="addNotice()">Post Notice</button>
         </div>
-        <h2>🔔 Notice Board</h2>
-        <div id="notice-list"></div>
+        <h2>🔔 Notice Board</h2><div id="notice-list"></div>
     </div>
 
     <div id="attendance" class="content-section">
-        <div class="admin-form" id="attendance-form-container">
-            <h3>📝 Attendance</h3>
+        <div class="admin-form">
+            <h3>📝 New Attendance</h3>
             <input type="date" id="att-date" style="background:#eee;">
-            <input type="text" id="att-subject" placeholder="Subject" style="border: 2px solid var(--accent-color);">
+            <input type="text" id="att-subject" placeholder="Subject Name">
             <div id="attendance-student-list" style="max-height: 200px; overflow-y: scroll; margin: 10px 0; border: 1px solid #ddd;"></div>
-            <button onclick="saveAttendance()">💾 Save</button>
+            <button onclick="saveAttendance()">💾 Save Record</button>
         </div>
-        <h2>📊 History</h2>
-        <div id="attendance-history"></div>
+        <h2>📊 History</h2><div id="attendance-history"></div>
     </div>
 
     <div id="polls" class="content-section">
         <div class="admin-form">
-            <h3>🗳️ Create Poll</h3>
             <input type="text" id="poll-quest" placeholder="Question">
-            <textarea id="poll-opts" placeholder="Options separated by comma" rows="2"></textarea>
-            <button onclick="addPoll()">✅ Create Poll</button>
+            <textarea id="poll-opts" placeholder="Options separated by comma"></textarea>
+            <button onclick="addPoll()">Create Poll</button>
         </div>
-        <h2>🗳️ Active Polls</h2>
-        <div id="poll-list"></div>
+        <h2>🗳️ Active Polls</h2><div id="poll-list"></div>
     </div>
 
     <nav>
@@ -261,32 +207,36 @@
     </nav>
 
     <script>
-        // --- API CONFIG (DIRECT) ---
-        const BIN_ID = "696dd4ea43b1c97be93a1b9a";
+        // GLOBAL NAV
+        window.showSection = function(id) {
+            document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active-section'));
+            document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+            document.getElementById(id).classList.add('active-section');
+            document.getElementById('btn-'+id).classList.add('active');
+            window.scrollTo(0,0);
+        };
+
+        // --- NEW SERVER CREDENTIALS ---
+        const BIN_ID = "696ddab4ae596e708fe5fa10"; 
         const MASTER_KEY = "$2a$10$KTYAb9AoPKihFgFBHUpPZ.w4pn1jq7NHptoZVp4iPFf3u0k6xmWly";
 
-        // GLOBAL VARS
+        // GLOBAL DATA
         let routineData=[], studentData=[], teacherData=[], noticeData=[], attendanceData=[], pollData=[], resourcesData=[], subjectData=[], marksData={};
         let isAdmin = false;
         let editStudentIndex = -1;
 
         // --- SERVER SYNC ---
-        // 1. Fetch Data (Initial Load)
         async function fetchData() {
-            const loader = document.getElementById('loader');
-            loader.style.display = 'flex';
-            
+            document.getElementById('loader').style.display = 'flex';
             try {
                 let res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, {
                     headers: { "X-Master-Key": MASTER_KEY }
                 });
-                
-                if(!res.ok) throw new Error("Server Error: " + res.status);
-                
+                if(!res.ok) throw new Error("Server Error");
                 let json = await res.json();
                 let d = json.record;
 
-                // Sync Variables
+                // Sync data, fallback to empty arrays if new bin
                 routineData = d.routine || [];
                 studentData = d.student || [];
                 teacherData = d.teacher || [];
@@ -298,48 +248,32 @@
                 marksData = d.marks || {};
 
                 renderAll();
-                loader.style.display = 'none';
-                document.getElementById('connection-status').style.display = 'block';
+                document.getElementById('loader').style.display = 'none';
             } catch(e) {
                 console.error(e);
-                // Keep loader visible with Retry button if failed
-                loader.innerHTML = `<div style="text-align:center; color:#e74c3c;"><h3>Connection Failed!</h3><p>Check Internet.</p><button onclick="location.reload()" style="padding:10px; margin-top:10px;">Retry</button></div>`;
+                alert("Connection Failed! Please check internet.");
             }
         }
 
-        // 2. Save Data (Push to Server)
         async function saveData() {
-            const loader = document.getElementById('loader');
-            loader.style.display = 'flex'; // Show loader while saving
-            
             let payload = {
                 routine: routineData, student: studentData, teacher: teacherData,
                 notice: noticeData, attendance: attendanceData, polls: pollData,
                 resources: resourcesData, subjects: subjectData, marks: marksData
             };
-
             try {
-                let res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
+                await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
                     method: "PUT",
                     headers: { "Content-Type": "application/json", "X-Master-Key": MASTER_KEY },
                     body: JSON.stringify(payload)
                 });
-                
-                if(res.ok) {
-                    renderAll();
-                    loader.style.display = 'none';
-                } else {
-                    throw new Error("Save Failed");
-                }
-            } catch(e) {
-                alert("Could not save to server! Check internet.");
-                loader.style.display = 'none';
-            }
+                renderAll(); // Refresh UI after save
+            } catch(e) { console.log("Save failed"); }
         }
 
         // --- RENDERERS ---
         function renderAll() {
-            // A. HOME
+            // A. HOME DASHBOARD
             const feed = document.getElementById('activity-feed'); feed.innerHTML = '';
             if(noticeData.length > 0) {
                 const n = noticeData[noticeData.length - 1];
@@ -347,7 +281,7 @@
             }
             if(pollData.length > 0) {
                 const p = pollData[pollData.length - 1];
-                feed.innerHTML += `<div class="act-card act-poll" onclick="showSection('polls')"><span class="act-title">🗳️ Active Poll: ${p.question}</span><span class="act-meta">Click to vote</span></div>`;
+                feed.innerHTML += `<div class="act-card" onclick="showSection('polls')" style="background:linear-gradient(135deg, #f39c12, #d35400); color:white; padding:15px; border-radius:8px; cursor:pointer; margin-bottom:10px;"><b>🗳️ Active Poll: ${p.question}</b><br><small>Click to vote</small></div>`;
             }
 
             const rBody = document.getElementById('routine-body'); rBody.innerHTML = '';
@@ -356,115 +290,93 @@
             // B. STUDENTS
             const stuL = document.getElementById('student-list'); stuL.innerHTML = '';
             studentData.forEach((s,x) => {
-                const imgSrc = s.img ? s.img : 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png';
-                const adminControls = isAdmin ? `<div style="display:flex;flex-direction:column;gap:5px;margin-left:auto;"><button class="edit-btn" onclick="editStudent(${x})">✏️</button><button class="delete-btn" onclick="del('student',${x})">🗑️</button></div>` : '';
-                stuL.innerHTML += `
-                    <div class="card">
-                        <div class="student-card-content">
-                            <img src="${imgSrc}" class="student-img" alt="Photo">
-                            <div class="student-info">
-                                <h3>${s.name}</h3>
-                                <p>ID: ${s.id} | Dip: <b>${s.dip||'-'}</b></p>
-                                <p class="phone-link" onclick="copyText('${s.phone}')">📞 ${s.phone}</p>
-                            </div>
-                        </div>
-                        ${adminControls}
+                let img = s.img || 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png';
+                let adminBtns = isAdmin ? `<div style="margin-left:auto; display:flex; gap:5px;"><button class="edit-btn" onclick="editStudent(${x})">✏️</button><button class="delete-btn" onclick="del('student',${x})">🗑️</button></div>` : '';
+                stuL.innerHTML += `<div class="card"><div class="student-card-content"><img src="${img}" class="student-img"><div><h3>${s.name}</h3><p>ID: ${s.id} | Dip: ${s.dip||'-'}</p><p class="phone-link" onclick="copyText('${s.phone}')">📞 ${s.phone}</p></div></div>${adminBtns}</div>`;
+            });
+
+            // C. ACADEMIC & MARKS
+            const cList = document.getElementById('course-list'); cList.innerHTML = '';
+            subjectData.forEach((sub, x) => {
+                let marksRows = '';
+                studentData.forEach(student => {
+                    const key = `${sub.name}_${student.id}`;
+                    const m = marksData[key] || {ct:0, mid:0, fin:0, lab:0};
+                    const tot = parseInt(m.ct||0)+parseInt(m.mid||0)+parseInt(m.fin||0)+parseInt(m.lab||0);
+                    const st = isAdmin?'':'disabled'; const bg = isAdmin?'white':'#f9f9f9';
+                    marksRows += `<tr><td><small>${student.id}</small></td><td><input type="number" class="marks-input" id="ct-${key}" value="${m.ct}" ${st} style="background:${bg}"></td><td><input type="number" class="marks-input" id="mid-${key}" value="${m.mid}" ${st} style="background:${bg}"></td><td><input type="number" class="marks-input" id="fin-${key}" value="${m.fin}" ${st} style="background:${bg}"></td><td><input type="number" class="marks-input" id="lab-${key}" value="${m.lab}" ${st} style="background:${bg}"></td><td><b>${tot}</b></td><td class="action-col"><button onclick="saveMark('${sub.name}','${student.id}')" style="background:#27ae60;color:white;border:none;border-radius:3px;cursor:pointer;">💾</button></td></tr>`;
+                });
+                cList.innerHTML += `
+                    <div class="subject-card">
+                        <div style="display:flex;justify-content:space-between;"><div><b>${sub.name}</b><br><small>${sub.code}</small></div><a href="${sub.link}" class="link-btn" target="_blank">Syllabus</a></div>
+                        <div style="background:#ecf0f1;height:10px;border-radius:5px;margin:10px 0;"><div class="progress-bar" style="width:${sub.progress}%"></div></div>
+                        <div style="font-size:0.8rem;display:flex;justify-content:space-between;"><span>Status: <b>${sub.status}</b></span><span>${sub.progress}%</span></div>
+                        <div class="admin-form" style="display:${isAdmin?'block':'none'};margin-top:5px;padding:0;background:none;box-shadow:none;"><input type="number" id="pv-${x}" value="${sub.progress}" style="width:40px"><input type="text" id="ps-${x}" value="${sub.status}" style="width:100px"><button onclick="updProg(${x})" style="width:auto;padding:3px;">Update</button><button onclick="del('subjects',${x})" style="background:#e74c3c;color:white;border:none;padding:3px;margin-left:5px;">Del</button></div>
+                        <button style="width:100%;margin-top:10px;padding:8px;background:var(--primary-color);color:white;border:none;border-radius:4px;" onclick="toggleMarks(${x})">📊 View Marks</button>
+                        <div id="mv-${x}" class="marks-container"><div style="display:flex;justify-content:space-between;margin-bottom:5px;"><h4>Marks</h4><button class="print-btn" onclick="pdf('tbl-m-${x}','${sub.name}')">🖨️ PDF</button></div><div style="overflow-x:auto;"><table id="tbl-m-${x}" style="font-size:0.8rem;"><thead><tr><th>ID</th><th>CT</th><th>Mid</th><th>Fin</th><th>Lab</th><th>Tot</th><th class="action-col">Sv</th></tr></thead><tbody>${marksRows}</tbody></table></div></div>
                     </div>`;
             });
 
-            // C. POLLS
-            const pollL = document.getElementById('poll-list'); pollL.innerHTML=''; 
-            pollData.slice().reverse().forEach((p,i)=>{
-                const ri = pollData.length-1-i; 
-                const tot = p.options.reduce((a,b)=>a+b.votes,0);
-                const hasVoted = localStorage.getItem('voted_poll_'+ri); // Use localstorage just for voting restriction
-                const votedClass = hasVoted ? 'poll-voted' : '';
-                const votedBadge = hasVoted ? '<span class="voted-badge">Voted ✅</span>' : '';
-
-                let opts = p.options.map((o,oi)=>`
-                    <div class="poll-option" onclick="vote(${ri},${oi})">
-                        <div class="poll-bar" style="width:${tot?Math.round((o.votes/tot)*100):0}%"></div>
-                        <div class="poll-text"><span>${o.text}</span><span>${o.votes}</span></div>
-                    </div>`).join('');
-                pollL.innerHTML += `<div class="poll-card ${votedClass}"><b>${p.question}</b> ${votedBadge} ${opts}<button class="delete-btn" onclick="del('polls',${ri})" style="margin-top:5px;display:block;">End Poll</button></div>`;
-            });
-
-            // D. OTHERS
+            // D. POLLS & OTHERS
             renderOthers();
             updateAdminView();
         }
 
-        function renderOthers() {
-            const cList = document.getElementById('course-list'); cList.innerHTML = '';
-            subjectData.forEach((sub, x) => {
-                cList.innerHTML += `<div class="subject-card"><div style="display:flex;justify-content:space-between;"><div><b>${sub.name}</b><br><small>${sub.code}</small></div><a href="${sub.link}" class="link-btn" target="_blank">Syllabus</a></div><div style="background:#ecf0f1;height:10px;border-radius:5px;margin:10px 0;"><div class="progress-bar" style="width:${sub.progress}%"></div></div><div style="font-size:0.8rem;display:flex;justify-content:space-between;"><span>Status: <b>${sub.status}</b></span><span>${sub.progress}%</span></div><div class="admin-form" style="display:${isAdmin?'block':'none'};margin-top:5px;padding:0;background:none;box-shadow:none;"><input type="number" id="pv-${x}" value="${sub.progress}" style="width:40px"><input type="text" id="ps-${x}" value="${sub.status}" style="width:100px"><button onclick="updProg(${x})" style="width:auto;padding:3px;">Update</button><button onclick="del('subject',${x})" style="background:#e74c3c;color:white;border:none;padding:3px;margin-left:5px;">Del</button></div></div>`;
-            });
-            const resL = document.getElementById('resource-list'); resL.innerHTML=''; resourcesData.forEach((r,x)=> resL.innerHTML+=`<div class="card"><b>${r.title}</b><div><a href="${r.url}" target="_blank" class="link-btn">Open</a><button class="delete-btn" onclick="del('resources',${x})">🗑️</button></div></div>`);
-            const notL = document.getElementById('notice-list'); notL.innerHTML=''; noticeData.slice().reverse().forEach((n,x)=> notL.innerHTML+=`<div class="card" style="display:block;border-left:4px solid #e74c3c;"><b>${n.title}</b> <span style="font-size:0.7rem;background:#eee;padding:2px;">${n.date}</span><p style="margin:5px 0;font-size:0.9rem;">${n.desc}</p><button class="delete-btn" onclick="del('notice',${noticeData.length-1-x})" style="float:right;">Del</button><div style="clear:both;"></div></div>`);
-            
-            const tL = document.getElementById('teacher-list'); tL.innerHTML=''; teacherData.forEach((t,x)=> tL.innerHTML+=`<div class="card"><div><b>${t.name}</b><br><small>${t.post}</small></div><button class="delete-btn" onclick="del('teacher',${x})">🗑️</button></div>`);
-            const attList = document.getElementById('attendance-student-list'); attList.innerHTML=''; studentData.forEach(s=> attList.innerHTML+=`<div style="display:flex;justify-content:space-between;padding:5px;"><span>${s.name}</span><input type="checkbox" value="${s.id}" checked class="att-check"></div>`);
-            const attH = document.getElementById('attendance-history'); attH.innerHTML=''; attendanceData.slice().reverse().forEach((a,i)=>{const ri=attendanceData.length-1-i; attH.innerHTML+=`<div class="card"><b>${a.subject}</b><br>${a.date} (P: ${a.presentIDs.length})<button class="delete-btn" onclick="del('attendance',${ri})" style="float:right">Del</button></div>`;});
-        }
-
-        // --- FUNCTIONS ---
+        // --- LOGIC ---
         function handleStudentSubmit() {
-            const n=v('s-name'), i=v('s-id'), d=v('s-dip'), p=v('s-phone');
-            const fileInput = document.getElementById('s-img-file');
-            if(!n) return alert("Name required");
-
-            if(fileInput.files && fileInput.files[0]) {
-                const reader = new FileReader();
-                reader.onload = function(e) { saveStudentData(n, i, d, p, e.target.result); };
-                reader.readAsDataURL(fileInput.files[0]);
-            } else {
-                const existingImg = (editStudentIndex !== -1) ? studentData[editStudentIndex].img : '';
-                saveStudentData(n, i, d, p, existingImg);
-            }
+            const n=v('s-name'), i=v('s-id'), d=v('s-dip'), p=v('s-phone'), file=document.getElementById('s-img-file').files[0];
+            if(!n) return alert("Name needed");
+            
+            const saveS = (img) => {
+                if(editStudentIndex===-1) studentData.push({name:n,id:i,dip:d,phone:p,img:img});
+                else studentData[editStudentIndex] = {name:n,id:i,dip:d,phone:p,img:img || studentData[editStudentIndex].img};
+                resetStudentForm(); saveData();
+            };
+            if(file) {
+                const r = new FileReader(); r.onload = (e) => saveS(e.target.result); r.readAsDataURL(file);
+            } else saveS('');
         }
 
-        function saveStudentData(name, id, dip, phone, img) {
-            if(editStudentIndex === -1) studentData.push({name, id, dip, phone, img});
-            else studentData[editStudentIndex] = {name, id, dip, phone, img};
-            resetStudentForm(); saveData();
+        function editStudent(i) {
+            const s = studentData[i];
+            document.getElementById('s-name').value=s.name; document.getElementById('s-id').value=s.id;
+            document.getElementById('s-dip').value=s.dip||''; document.getElementById('s-phone').value=s.phone;
+            editStudentIndex=i; document.getElementById('btn-student-action').innerText="Update"; window.scrollTo(0,0);
         }
-
-        function editStudent(index) {
-            const s = studentData[index];
-            document.getElementById('s-name').value = s.name;
-            document.getElementById('s-id').value = s.id;
-            document.getElementById('s-dip').value = s.dip || '';
-            document.getElementById('s-phone').value = s.phone;
-            editStudentIndex = index;
-            document.getElementById('btn-student-action').innerText = "💾 Update";
-            document.getElementById('student-form').style.display = 'block';
-            window.scrollTo(0,0);
-        }
-
         function resetStudentForm() {
             document.querySelectorAll('#student-form input').forEach(i=>i.value='');
-            editStudentIndex = -1;
-            document.getElementById('btn-student-action').innerText = "➕ Add Student";
+            editStudentIndex=-1; document.getElementById('btn-student-action').innerText="➕ Add Student";
         }
 
-        function copyText(text) { navigator.clipboard.writeText(text).then(() => alert("Copied: " + text)); }
-
+        function saveMark(sub,id){ const k=`${sub}_${id}`; marksData[k]={ct:v(`ct-${k}`),mid:v(`mid-${k}`),fin:v(`fin-${k}`),lab:v(`lab-${k}`)}; saveData(); }
+        function toggleMarks(x){ const d=document.getElementById(`mv-${x}`); d.style.display=d.style.display=='block'?'none':'block'; }
+        
         function vote(pi, oi) {
-            if(localStorage.getItem('voted_poll_'+pi)) return alert("You have already voted!");
-            pollData[pi].options[oi].votes++;
-            localStorage.setItem('voted_poll_'+pi, 'true');
-            saveData();
+            if(localStorage.getItem('vote_'+pi)) return alert("Already Voted!");
+            pollData[pi].options[oi].votes++; localStorage.setItem('vote_'+pi, true); saveData();
+        }
+
+        function renderOthers() {
+            const pollL = document.getElementById('poll-list'); pollL.innerHTML=''; 
+            pollData.slice().reverse().forEach((p,i)=>{
+                const ri=pollData.length-1-i; const tot=p.options.reduce((a,b)=>a+b.votes,0);
+                const voted = localStorage.getItem('vote_'+ri);
+                let opts = p.options.map((o,oi)=>`<div class="poll-option" onclick="vote(${ri},${oi})"><div class="poll-bar" style="width:${tot?Math.round(o.votes/tot*100):0}%"></div><div class="poll-text"><span>${o.text}</span><span>${o.votes}</span></div></div>`).join('');
+                pollL.innerHTML+=`<div class="poll-card ${voted?'poll-voted':''}"><b>${p.question}</b> ${voted?'(Voted)':''} ${opts}<button class="delete-btn" onclick="del('polls',${ri})" style="margin-top:5px;">End</button></div>`;
+            });
+
+            const resL=document.getElementById('resource-list'); resL.innerHTML=''; resourcesData.forEach((r,x)=>resL.innerHTML+=`<div class="card"><b>${r.title}</b><a href="${r.url}" target="_blank" style="float:right">Open</a><button class="delete-btn" onclick="del('resources',${x})">Del</button></div>`);
+            const notL=document.getElementById('notice-list'); notL.innerHTML=''; noticeData.slice().reverse().forEach((n,x)=>notL.innerHTML+=`<div class="card" style="border-left:4px solid #e74c3c"><b>${n.title}</b><br>${n.desc}<button class="delete-btn" onclick="del('notice',${noticeData.length-1-x})" style="float:right">Del</button></div>`);
+            const tL=document.getElementById('teacher-list'); tL.innerHTML=''; teacherData.forEach((t,x)=>tL.innerHTML+=`<div class="card"><b>${t.name}</b><br>${t.post}<button class="delete-btn" onclick="del('teacher',${x})" style="float:right">Del</button></div>`);
+            const attL=document.getElementById('attendance-student-list'); attL.innerHTML=''; studentData.forEach(s=>attL.innerHTML+=`<div style="display:flex;justify-content:space-between;padding:5px;"><span>${s.name}</span><input type="checkbox" value="${s.id}" checked class="att-check"></div>`);
+            const attH=document.getElementById('attendance-history'); attH.innerHTML=''; attendanceData.slice().reverse().forEach((a,i)=>attH.innerHTML+=`<div class="card"><b>${a.subject}</b><br>${a.date} (P: ${a.presentIDs.length})<button class="delete-btn" onclick="del('attendance',${attendanceData.length-1-i})" style="float:right">Del</button></div>`);
         }
 
         // --- UTILS ---
         function v(id){ return document.getElementById(id).value; }
-        function showSection(id) {
-            document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active-section'));
-            document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
-            document.getElementById(id).classList.add('active-section');
-            document.getElementById('btn-'+id).classList.add('active');
-            window.scrollTo(0,0);
-        }
+        function copyText(tx) { navigator.clipboard.writeText(tx).then(()=>alert("Copied!")); }
+        function pdf(id,n){ const e=document.getElementById(id); const w=document.createElement('div'); w.innerHTML='<h3 style="text-align:center">UU EEE</h3>'; w.appendChild(e.cloneNode(true)); html2pdf().from(w).save(n+'.pdf'); }
+        function downloadGeneralPDF(id,n){pdf(id,n);}
         function toggleAdminMode() { isAdmin=!isAdmin; updateAdminView(); renderAll(); }
         function updateAdminView() {
             document.getElementById('admin-toggle').style.background=isAdmin?"#ffc107":"rgba(255,255,255,0.2)";
@@ -473,8 +385,8 @@
             document.querySelectorAll('.edit-btn').forEach(e=>e.style.display=isAdmin?'inline-block':'none');
             document.querySelectorAll('.action-col').forEach(e=>e.style.display=isAdmin?'table-cell':'none');
         }
-        function downloadGeneralPDF(id, n) { const e=document.getElementById(id); const w=document.createElement('div'); w.innerHTML='<h3 style="text-align:center">UU EEE</h3>'; w.appendChild(e.cloneNode(true)); html2pdf().from(w).save(n+'.pdf'); }
 
+        // Adders
         function addRoutine(){ if(v('r-day')) { routineData.push({day:v('r-day'),sub:v('r-sub'),room:v('r-room')}); saveData(); } }
         function addSubject(){ if(v('sub-name')) { subjectData.push({name:v('sub-name'),code:v('sub-code'),link:v('sub-link'),progress:0,status:'Start'}); saveData(); } }
         function addResource(){ if(v('res-title')) { resourcesData.push({title:v('res-title'),url:v('res-url')}); saveData(); } }
@@ -485,7 +397,7 @@
         function updProg(x){ subjectData[x].progress=v(`pv-${x}`); subjectData[x].status=v(`ps-${x}`); saveData(); }
 
         function del(k,i) {
-            if(!confirm('Sure?')) return;
+            if(!confirm('Delete?')) return;
             if(k=='student') studentData.splice(i,1); else if(k=='routine') routineData.splice(i,1);
             else if(k=='subjects') subjectData.splice(i,1); else if(k=='resources') resourcesData.splice(i,1);
             else if(k=='teacher') teacherData.splice(i,1); else if(k=='notice') noticeData.splice(i,1);
@@ -493,7 +405,7 @@
             saveData();
         }
 
-        // START
+        // Start App
         fetchData();
     </script>
 </body>
