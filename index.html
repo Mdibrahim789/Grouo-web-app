@@ -40,6 +40,7 @@
         .admin-box { background: rgba(255,255,255,0.05); border-radius: 8px; padding: 12px; text-align: center; cursor: pointer; border: 1px solid transparent; transition: 0.3s; }
         .admin-box.active-mode { background: rgba(34, 197, 94, 0.1); border-color: var(--success); color: var(--success); }
         .admin-box.cr-mode { background: rgba(245, 158, 11, 0.1); border-color: var(--active-bg); color: var(--active-bg); }
+        .admin-box.stu-mode { background: rgba(59, 130, 246, 0.1); border-color: #3b82f6; color: #3b82f6; }
 
         .sync-status { display: flex; align-items: center; gap: 8px; font-size: 0.75rem; color: var(--text-muted); margin-top: 15px; font-weight: 600; text-transform: uppercase; }
         .status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--danger); }
@@ -59,7 +60,7 @@
         .admin-form input, .admin-form select, .admin-form textarea { width: 100%; padding: 10px; margin: 8px 0; border: 1px solid #cbd5e1; border-radius: 6px; }
         .admin-form button { background: var(--active-bg); color: black; font-weight: bold; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; margin-top: 10px; width: 100%; }
 
-        table { width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; margin-bottom: 20px; }
+        table { width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; margin-bottom: 20px; font-size: 0.9rem; }
         th { background: #f8fafc; text-align: left; padding: 12px; font-size: 0.85rem; color: #64748b; text-transform: uppercase; }
         td { padding: 12px; border-bottom: 1px solid #f1f5f9; }
 
@@ -149,15 +150,15 @@
                         <option value="Online">💻 Online Class</option>
                     </select>
                     <input type="text" id="r-day" placeholder="Day (e.g. Sunday)">
-                    <input type="text" id="r-sub" placeholder="Subject">
-                    <input type="text" id="r-room" placeholder="Room">
+                    <input type="text" id="r-time" placeholder="Time (e.g. 10:00 AM)"> <input type="text" id="r-sub" placeholder="Subject">
+                    <input type="text" id="r-teacher" placeholder="Teacher (e.g. JB)"> <input type="text" id="r-room" placeholder="Room / Link">
                     <button onclick="addRoutine()">➕ Add Class</button>
                 </div>
 
                 <div class="routine-header off"><i class="fa-solid fa-building"></i> Offline Class (Campus)</div>
                 <div style="overflow-x:auto;">
                     <table id="routine-off-table">
-                        <thead><tr><th>Day</th><th>Subject</th><th>Room</th><th class="action-col">Act</th></tr></thead>
+                        <thead><tr><th>Day</th><th>Time</th><th>Subject</th><th>Teacher</th><th>Room</th><th class="action-col">Act</th></tr></thead>
                         <tbody id="routine-off-body"></tbody>
                     </table>
                 </div>
@@ -165,7 +166,7 @@
                 <div class="routine-header on"><i class="fa-solid fa-laptop"></i> Online Class</div>
                 <div style="overflow-x:auto;">
                     <table id="routine-on-table">
-                        <thead><tr><th>Day</th><th>Subject</th><th>Link</th><th class="action-col">Act</th></tr></thead>
+                        <thead><tr><th>Day</th><th>Time</th><th>Subject</th><th>Teacher</th><th>Link</th><th class="action-col">Act</th></tr></thead>
                         <tbody id="routine-on-body"></tbody>
                     </table>
                 </div>
@@ -192,14 +193,15 @@
 
             <div id="students" class="content-section">
                 <h2 class="section-title">👥 Student Profiles</h2>
-                <div class="admin-form" id="student-form" data-perm="student">
+                <div class="admin-form" id="student-form" data-perm="student" style="display:none;">
+                    <h3 id="stu-form-title">Add/Edit Student</h3>
                     <label style="font-weight:bold; font-size:0.9rem;">Profile Picture (Auto Compressed)</label>
                     <input type="file" id="s-img-file" accept="image/*">
                     <input type="text" id="s-name" placeholder="Name">
                     <input type="text" id="s-id" placeholder="ID">
                     <input type="text" id="s-dip" placeholder="Diploma Session (e.g. 2021-22)">
                     <input type="text" id="s-phone" placeholder="Phone">
-                    <button onclick="handleStudentSubmit()">Add Student</button>
+                    <button id="btn-save-stu" onclick="handleStudentSubmit()">Save Student</button>
                     <button onclick="resetStudentForm()" style="background:#64748b; margin-top:5px;">Cancel</button>
                 </div>
                 <div id="student-list"></div>
@@ -268,23 +270,37 @@
 
         // --- STATE ---
         let data = { routine:[], student:[], teacher:[], notice:[], attendance:[], polls:[], resources:[], subjects:[], crKeys:[] };
-        let appState = { role: 'VIEWER', permissions: [] }; 
+        let appState = { role: 'VIEWER', permissions: [], currentUser: null, editIndex: -1 }; 
         let tempAttendance = new Set();
 
         // --- AUTH & PERMISSIONS ---
         function handleLogin() {
             if (appState.role !== 'VIEWER') {
-                appState.role = 'VIEWER'; appState.permissions = [];
+                appState.role = 'VIEWER'; appState.permissions = []; appState.currentUser = null; appState.editIndex = -1;
                 renderAuthUI(); renderAll(); return;
             }
-            let input = prompt("Enter Password (Master) or Access Key (CR):");
+            
+            let input = prompt("Enter Password (Master), Access Key (CR), or Student ID:");
             if (!input) return;
+            
             if (input === ADMIN_PASS) {
                 appState.role = 'MASTER'; alert("✅ Master Admin Logged In!");
             } else {
                 let cr = data.crKeys.find(k => k.key === input);
-                if (cr) { appState.role = 'CR'; appState.permissions = cr.permissions; alert(`✅ Welcome CR! Access: ${cr.permissions.join(', ')}`); } 
-                else { alert("❌ Invalid Credentials"); return; }
+                if (cr) { 
+                    appState.role = 'CR'; appState.permissions = cr.permissions; 
+                    alert(`✅ Welcome CR! Access: ${cr.permissions.join(', ')}`); 
+                } else {
+                    // Check Student
+                    let stuIdx = data.student.findIndex(s => s.id === input);
+                    if (stuIdx !== -1) {
+                        appState.role = 'STUDENT';
+                        appState.currentUser = data.student[stuIdx];
+                        alert(`✅ Welcome Student: ${appState.currentUser.name}`);
+                    } else {
+                        alert("❌ Invalid Credentials"); return;
+                    }
+                }
             }
             renderAuthUI(); renderAll();
         }
@@ -303,8 +319,10 @@
                 btn.className = 'admin-box active-mode'; txt.innerText = "Logout Master"; panel.style.display = 'block'; renderCRKeys();
             } else if (appState.role === 'CR') {
                 btn.className = 'admin-box cr-mode'; txt.innerText = "Logout CR"; panel.style.display = 'none';
+            } else if (appState.role === 'STUDENT') {
+                btn.className = 'admin-box stu-mode'; txt.innerText = "Logout " + appState.currentUser.id; panel.style.display = 'none';
             } else {
-                btn.className = 'admin-box'; txt.innerText = "Enable Admin"; panel.style.display = 'none';
+                btn.className = 'admin-box'; txt.innerText = "Enable Admin/Login"; panel.style.display = 'none';
             }
         }
 
@@ -318,9 +336,7 @@
             data.crKeys.push({ name: name, key: key, permissions: perms });
             saveData(); renderCRKeys(); alert(`Key Generated: ${key}`);
         }
-
         function deleteCRKey(index) { if(confirm("Revoke this key?")) { data.crKeys.splice(index, 1); saveData(); renderCRKeys(); } }
-
         function renderCRKeys() {
             const list = document.getElementById('cr-keys-list'); list.innerHTML = '';
             data.crKeys.forEach((k, i) => {
@@ -366,6 +382,7 @@
 
         // --- RENDERERS ---
         function renderAll() {
+            // Permission Based Visibility
             document.querySelectorAll('.admin-form').forEach(f => {
                 const section = f.getAttribute('data-perm');
                 if (f.id === 'att-controls') return; 
@@ -379,69 +396,58 @@
             const offBody = document.getElementById('routine-off-body');
             const onBody = document.getElementById('routine-on-body');
             offBody.innerHTML = ''; onBody.innerHTML = '';
-
             data.routine.forEach((i, x) => {
                 const delBtn = canEdit('routine') ? `<button onclick="del('routine',${x})" style="color:red;border:none;background:none;cursor:pointer;">🗑️</button>` : '';
-                const row = `<tr><td><b>${i.day}</b></td><td>${i.sub}</td><td>${i.room}</td><td class="action-col">${delBtn}</td></tr>`;
-                
-                if (i.type === 'Online') onBody.innerHTML += row;
-                else offBody.innerHTML += row;
+                const row = `<tr><td><b>${i.day}</b></td><td>${i.time||'-'}</td><td>${i.sub}</td><td>${i.teacher||'-'}</td><td>${i.room}</td><td class="action-col">${delBtn}</td></tr>`;
+                if (i.type === 'Online') onBody.innerHTML += row; else offBody.innerHTML += row;
             });
 
-            // Students
+            // --- STUDENTS ---
             const stuL = document.getElementById('student-list'); stuL.innerHTML='';
             data.student.forEach((s,x) => {
                 let img = s.img || 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png';
-                let btns = canEdit('student') ? `<button onclick="del('student',${x})" style="background:#ef4444; color:white; border:none; padding:5px 10px; border-radius:4px; float:right;">Delete</button>` : '';
+                let btns = '';
+                // Delete: Only Admin/CR
+                if(canEdit('student')) btns += `<button onclick="del('student',${x})" style="background:#ef4444; color:white; border:none; padding:5px 10px; border-radius:4px; float:right; margin-left:5px;">Delete</button>`;
+                // Edit: Admin/CR OR The Student Themselves
+                if(canEdit('student') || (appState.role === 'STUDENT' && appState.currentUser.id === s.id)) {
+                    btns += `<button onclick="loadStudentForEdit(${x})" style="background:#f59e0b; color:white; border:none; padding:5px 10px; border-radius:4px; float:right;">✏️ Edit</button>`;
+                }
+
                 stuL.innerHTML += `<div class="card" style="display:flex; align-items:center; gap:15px;">
                     <img src="${img}" style="width:50px; height:50px; border-radius:50%; object-fit:cover; border:2px solid var(--active-bg);">
                     <div style="flex:1;"><h4 style="margin:0;">${s.name}</h4><small style="color:#64748b;">ID: ${s.id} | Dip: ${s.dip||'-'} | ${s.phone}</small></div>${btns}
                 </div>`;
             });
 
-            // Teachers
+            // Teachers, Notices etc.
             const tL = document.getElementById('teacher-list'); tL.innerHTML='';
             data.teacher.forEach((t,x) => {
                 let img = t.img || 'https://cdn-icons-png.flaticon.com/512/1995/1995539.png';
                 let btns = canEdit('teacher') ? `<button onclick="del('teacher',${x})" style="float:right;color:red;background:none;border:none;">Del</button>` : '';
-                tL.innerHTML += `<div class="card" style="display:flex; align-items:center; gap:15px;">
-                    <img src="${img}" style="width:50px; height:50px; border-radius:50%; object-fit:cover; border:2px solid #334155;">
-                    <div style="flex:1;"><b>${t.name}</b><br><small>${t.post}</small></div>${btns}
-                </div>`;
+                tL.innerHTML += `<div class="card" style="display:flex; align-items:center; gap:15px;"><img src="${img}" style="width:50px; height:50px; border-radius:50%; object-fit:cover; border:2px solid #334155;"><div style="flex:1;"><b>${t.name}</b><br><small>${t.post}</small></div>${btns}</div>`;
             });
-
-            // Notices
             const nList = document.getElementById('notice-list'); nList.innerHTML = '';
             data.notice.slice().reverse().forEach((n, x) => {
                 let btns = canEdit('notice') ? `<button onclick="del('notice',${data.notice.length-1-x})" style="color:red; background:none; border:none; cursor:pointer; margin-top:5px;">Delete</button>` : '';
                 nList.innerHTML += `<div class="card" style="border-left: 4px solid #3b82f6;"><b>${n.title}</b> <span style="font-size:0.75rem; float:right; color:#888;">${n.date}</span><p style="margin:5px 0 0; font-size:0.9rem; color:#475569;">${n.desc}</p>${btns}</div>`;
             });
-
-            // Feed
             const feed = document.getElementById('activity-feed'); feed.innerHTML='';
-            if(data.notice.length) {
-                feed.innerHTML += `<div style="background:#dbeafe; padding:15px; border-radius:8px; border:1px solid #93c5fd; color:#1e40af; margin-bottom:15px;">📢 <b>Latest:</b> ${data.notice[data.notice.length-1].title}</div>`;
-            }
+            if(data.notice.length) feed.innerHTML += `<div style="background:#dbeafe; padding:15px; border-radius:8px; border:1px solid #93c5fd; color:#1e40af; margin-bottom:15px;">📢 <b>Latest:</b> ${data.notice[data.notice.length-1].title}</div>`;
 
-            // Attendance
             const attH = document.getElementById('attendance-history'); attH.innerHTML='';
             data.attendance.slice().reverse().forEach((a,i) => {
                 let ri = data.attendance.length - 1 - i;
                 let btns = canEdit('attendance') ? `<button onclick="del('attendance',${ri})" style="color:red; background:none; border:none; cursor:pointer;">🗑️</button>` : '';
                 attH.innerHTML += `<div class="card" style="padding:15px; border-left:4px solid var(--active-bg);"><div style="display:flex; justify-content:space-between; align-items:center;"><div><b>${a.subject}</b> <small>(${a.date})</small><br><small>Present: ${a.presentIDs.length} / ${data.student.length}</small></div><div><button onclick="generatePDF(${ri})" style="background:#334155; color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer;">PDF</button> ${btns}</div></div></div>`;
             });
-
-            // Att Grid
             const grid = document.getElementById('attendance-grid');
             if(grid.innerHTML === '') { data.student.forEach(s => { grid.innerHTML += `<div id="att-stu-${s.id}" class="att-student" onclick="toggleAttStatus('${s.id}')">${s.name}<br><small>${s.id}</small></div>`; }); }
 
-            // Resources & Polls
             const rL=document.getElementById('resource-list'); rL.innerHTML=''; 
             data.resources.forEach((r,x)=>{ let btns = canEdit('academic') ? `<button onclick="del('resources',${x})" style="float:right;color:red;background:none;border:none;">Del</button>` : ''; rL.innerHTML+=`<div class="card"><a href="${r.url}" target="_blank" style="text-decoration:none; color:#2563eb; font-weight:bold;">📄 ${r.title}</a> ${btns}</div>` });
-
             const cList = document.getElementById('course-list'); cList.innerHTML = ''; 
             data.subjects.forEach((s,x)=>{ let btns = canEdit('academic') ? `<button onclick="del('subjects',${x})" style="float:right;color:red;background:none;border:none;">Del</button>` : ''; cList.innerHTML+=`<div class="card"><b>${s.name}</b> (${s.code}) <a href="${s.link}" target="_blank">Link</a> ${btns}</div>` });
-            
             const pList = document.getElementById('poll-list'); pList.innerHTML = ''; 
             data.polls.forEach((p,x)=>{ let btns = canEdit('polls') ? `<button onclick="del('polls',${x})" style="float:right;color:red;background:none;border:none;">Del</button>` : ''; pList.innerHTML+=`<div class="card"><b>${p.question}</b> ${btns}</div>` });
         }
@@ -461,13 +467,52 @@
             tempAttendance.clear(); document.querySelectorAll('.att-student').forEach(e => e.classList.remove('present')); saveData();
         }
 
+        // --- STUDENT EDIT LOGIC ---
+        function loadStudentForEdit(index) {
+            const s = data.student[index];
+            document.getElementById('s-name').value = s.name;
+            document.getElementById('s-id').value = s.id;
+            document.getElementById('s-dip').value = s.dip || '';
+            document.getElementById('s-phone').value = s.phone;
+            
+            const form = document.getElementById('student-form');
+            form.style.display = 'block';
+            document.getElementById('stu-form-title').innerText = "Edit Student Profile";
+            document.getElementById('btn-save-stu').innerText = "Update Profile";
+            
+            appState.editIndex = index;
+            window.scrollTo(0,0);
+        }
+
         function handleStudentSubmit() {
             const n=document.getElementById('s-name').value, i=document.getElementById('s-id').value, d=document.getElementById('s-dip').value, p=document.getElementById('s-phone').value, f=document.getElementById('s-img-file').files[0];
             if(!n) return alert("Name?");
-            const saveS = (img) => { data.student.push({name:n, id:i, dip:d, phone:p, img:img}); resetStudentForm(); saveData(); };
-            if(f) compressImage(f, (url) => saveS(url)); else saveS('');
+            
+            const processSave = (img) => {
+                const newObj = {name:n, id:i, dip:d, phone:p, img:img};
+                
+                if (appState.editIndex > -1) {
+                    // Update
+                    if(!img) newObj.img = data.student[appState.editIndex].img;
+                    data.student[appState.editIndex] = newObj;
+                    alert("Profile Updated!");
+                } else {
+                    // New
+                    data.student.push(newObj);
+                }
+                resetStudentForm(); saveData();
+            };
+
+            if(f) compressImage(f, (url) => processSave(url)); else processSave(null);
         }
-        function resetStudentForm() { document.querySelectorAll('#student-form input').forEach(i=>i.value=''); }
+        
+        function resetStudentForm() { 
+            document.querySelectorAll('#student-form input').forEach(i=>i.value=''); 
+            document.getElementById('student-form').style.display = canEdit('student') ? 'block' : 'none'; 
+            appState.editIndex = -1;
+            document.getElementById('stu-form-title').innerText = "Add/Edit Student";
+            document.getElementById('btn-save-stu').innerText = "Save Student";
+        }
 
         function handleTeacherSubmit() {
             const n=document.getElementById('t-name').value, post=document.getElementById('t-post').value, ph=document.getElementById('t-phone').value, f=document.getElementById('t-img-file').files[0];
@@ -476,7 +521,7 @@
             if(f) compressImage(f, (url) => saveT(url)); else saveT('');
         }
 
-        function addRoutine(){ data.routine.push({type: document.getElementById('r-type').value, day:document.getElementById('r-day').value, sub:document.getElementById('r-sub').value, room:document.getElementById('r-room').value}); saveData(); }
+        function addRoutine(){ data.routine.push({type: document.getElementById('r-type').value, day:document.getElementById('r-day').value, time:document.getElementById('r-time').value, sub:document.getElementById('r-sub').value, teacher:document.getElementById('r-teacher').value, room:document.getElementById('r-room').value}); saveData(); }
         function addSubject(){ data.subjects.push({name:document.getElementById('sub-name').value, code:document.getElementById('sub-code').value, link:document.getElementById('sub-link').value}); saveData(); }
         function addResource(){ data.resources.push({title:document.getElementById('res-title').value, url:document.getElementById('res-url').value}); saveData(); }
         function addNotice(){ data.notice.push({date:document.getElementById('n-date').value, title:document.getElementById('n-title').value, desc:document.getElementById('n-desc').value}); saveData(); }
