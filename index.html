@@ -14,7 +14,7 @@
         :root {
             --sidebar-bg: #0f172a;
             --sidebar-hover: #1e293b;
-            --active-bg: #f59e0b;
+            --active-bg: #f59e0b;       
             --active-text: #000000;
             --text-muted: #94a3b8;
             --text-light: #ffffff;
@@ -62,6 +62,10 @@
         table { width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; margin-bottom: 20px; }
         th { background: #f8fafc; text-align: left; padding: 12px; font-size: 0.85rem; color: #64748b; text-transform: uppercase; }
         td { padding: 12px; border-bottom: 1px solid #f1f5f9; }
+
+        .routine-header { background: #e2e8f0; padding: 8px 15px; font-weight: bold; border-radius: 8px 8px 0 0; color: #1e293b; display: flex; align-items: center; gap: 8px; margin-top: 20px; }
+        .routine-header.off { border-left: 5px solid #22c55e; }
+        .routine-header.on { border-left: 5px solid #3b82f6; }
 
         .att-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; margin-bottom: 15px; }
         .att-student { background: white; border: 1px solid #e2e8f0; padding: 15px; border-radius: 8px; text-align: center; cursor: pointer; transition: 0.2s; }
@@ -137,14 +141,34 @@
             <div id="home" class="content-section active-section">
                 <h2 class="section-title">👋 Welcome Batch 2026</h2>
                 <div id="activity-feed"></div>
-                <h3 style="margin-top:30px;">📅 Class Routine</h3>
+
                 <div class="admin-form" data-perm="routine">
+                    <h3>Add Class Routine</h3>
+                    <select id="r-type" style="margin-bottom:10px;">
+                        <option value="Offline">🏢 Offline Class (Campus)</option>
+                        <option value="Online">💻 Online Class</option>
+                    </select>
                     <input type="text" id="r-day" placeholder="Day (e.g. Sunday)">
                     <input type="text" id="r-sub" placeholder="Subject">
                     <input type="text" id="r-room" placeholder="Room">
                     <button onclick="addRoutine()">➕ Add Class</button>
                 </div>
-                <div style="overflow-x:auto;"><table id="routine-table"><thead><tr><th>Day</th><th>Subject</th><th>Room</th><th class="action-col">Act</th></tr></thead><tbody id="routine-body"></tbody></table></div>
+
+                <div class="routine-header off"><i class="fa-solid fa-building"></i> Offline Class (Campus)</div>
+                <div style="overflow-x:auto;">
+                    <table id="routine-off-table">
+                        <thead><tr><th>Day</th><th>Subject</th><th>Room</th><th class="action-col">Act</th></tr></thead>
+                        <tbody id="routine-off-body"></tbody>
+                    </table>
+                </div>
+
+                <div class="routine-header on"><i class="fa-solid fa-laptop"></i> Online Class</div>
+                <div style="overflow-x:auto;">
+                    <table id="routine-on-table">
+                        <thead><tr><th>Day</th><th>Subject</th><th>Link</th><th class="action-col">Act</th></tr></thead>
+                        <tbody id="routine-on-body"></tbody>
+                    </table>
+                </div>
             </div>
 
             <div id="academic" class="content-section">
@@ -244,40 +268,25 @@
 
         // --- STATE ---
         let data = { routine:[], student:[], teacher:[], notice:[], attendance:[], polls:[], resources:[], subjects:[], crKeys:[] };
-        let appState = { role: 'VIEWER', permissions: [] }; // Roles: VIEWER, MASTER, CR
+        let appState = { role: 'VIEWER', permissions: [] }; 
         let tempAttendance = new Set();
 
         // --- AUTH & PERMISSIONS ---
         function handleLogin() {
             if (appState.role !== 'VIEWER') {
-                // Logout
-                appState.role = 'VIEWER';
-                appState.permissions = [];
-                renderAuthUI();
-                renderAll();
-                return;
+                appState.role = 'VIEWER'; appState.permissions = [];
+                renderAuthUI(); renderAll(); return;
             }
-
             let input = prompt("Enter Password (Master) or Access Key (CR):");
             if (!input) return;
-
             if (input === ADMIN_PASS) {
-                appState.role = 'MASTER';
-                alert("✅ Master Admin Logged In!");
+                appState.role = 'MASTER'; alert("✅ Master Admin Logged In!");
             } else {
-                // Check CR Keys
                 let cr = data.crKeys.find(k => k.key === input);
-                if (cr) {
-                    appState.role = 'CR';
-                    appState.permissions = cr.permissions;
-                    alert(`✅ Welcome CR! Access: ${cr.permissions.join(', ')}`);
-                } else {
-                    alert("❌ Invalid Credentials");
-                    return;
-                }
+                if (cr) { appState.role = 'CR'; appState.permissions = cr.permissions; alert(`✅ Welcome CR! Access: ${cr.permissions.join(', ')}`); } 
+                else { alert("❌ Invalid Credentials"); return; }
             }
-            renderAuthUI();
-            renderAll();
+            renderAuthUI(); renderAll();
         }
 
         function canEdit(section) {
@@ -290,20 +299,12 @@
             const btn = document.getElementById('admin-btn');
             const txt = document.getElementById('auth-text');
             const panel = document.getElementById('master-panel');
-
             if (appState.role === 'MASTER') {
-                btn.className = 'admin-box active-mode';
-                txt.innerText = "Logout Master";
-                panel.style.display = 'block';
-                renderCRKeys();
+                btn.className = 'admin-box active-mode'; txt.innerText = "Logout Master"; panel.style.display = 'block'; renderCRKeys();
             } else if (appState.role === 'CR') {
-                btn.className = 'admin-box cr-mode';
-                txt.innerText = "Logout CR";
-                panel.style.display = 'none';
+                btn.className = 'admin-box cr-mode'; txt.innerText = "Logout CR"; panel.style.display = 'none';
             } else {
-                btn.className = 'admin-box';
-                txt.innerText = "Enable Admin";
-                panel.style.display = 'none';
+                btn.className = 'admin-box'; txt.innerText = "Enable Admin"; panel.style.display = 'none';
             }
         }
 
@@ -311,54 +312,32 @@
         function generateCRKey() {
             const name = document.getElementById('new-cr-name').value || 'Unknown';
             let perms = [];
-            ['routine','notice','academic','student','teacher','attendance','polls'].forEach(p => {
-                if(document.getElementById('perm-'+p).checked) perms.push(p);
-            });
-
+            ['routine','notice','academic','student','teacher','attendance','polls'].forEach(p => { if(document.getElementById('perm-'+p).checked) perms.push(p); });
             if (perms.length === 0) return alert("Select at least one permission!");
-
-            // Generate Random Key
             const key = "CR-" + Math.random().toString(36).substr(2, 6).toUpperCase();
             data.crKeys.push({ name: name, key: key, permissions: perms });
-            saveData();
-            renderCRKeys();
-            alert(`Key Generated: ${key}`);
+            saveData(); renderCRKeys(); alert(`Key Generated: ${key}`);
         }
 
-        function deleteCRKey(index) {
-            if(confirm("Revoke this key?")) {
-                data.crKeys.splice(index, 1);
-                saveData();
-                renderCRKeys();
-            }
-        }
+        function deleteCRKey(index) { if(confirm("Revoke this key?")) { data.crKeys.splice(index, 1); saveData(); renderCRKeys(); } }
 
         function renderCRKeys() {
-            const list = document.getElementById('cr-keys-list');
-            list.innerHTML = '';
+            const list = document.getElementById('cr-keys-list'); list.innerHTML = '';
             data.crKeys.forEach((k, i) => {
-                list.innerHTML += `<div class="cr-list-item">
-                    <span><b>${k.name}</b> (${k.key})<br><small>${k.permissions.join(', ')}</small></span>
-                    <button onclick="deleteCRKey(${i})" style="background:#ef4444;color:white;border:none;padding:2px 5px;border-radius:3px;cursor:pointer;">X</button>
-                </div>`;
+                list.innerHTML += `<div class="cr-list-item"><span><b>${k.name}</b> (${k.key})<br><small>${k.permissions.join(', ')}</small></span><button onclick="deleteCRKey(${i})" style="background:#ef4444;color:white;border:none;padding:2px 5px;border-radius:3px;cursor:pointer;">X</button></div>`;
             });
         }
 
         // --- IMAGE COMPRESSION ---
         function compressImage(file, callback) {
-            const reader = new FileReader();
-            reader.readAsDataURL(file);
+            const reader = new FileReader(); reader.readAsDataURL(file);
             reader.onload = event => {
-                const img = new Image();
-                img.src = event.target.result;
+                const img = new Image(); img.src = event.target.result;
                 img.onload = () => {
                     const canvas = document.createElement('canvas');
-                    const MAX_WIDTH = 600; 
-                    const scaleSize = MAX_WIDTH / img.width;
-                    if (img.width > MAX_WIDTH) { canvas.width = MAX_WIDTH; canvas.height = img.height * scaleSize; }
-                    else { canvas.width = img.width; canvas.height = img.height; }
-                    const ctx = canvas.getContext('2d');
-                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                    const MAX_WIDTH = 600; const scaleSize = MAX_WIDTH / img.width;
+                    if (img.width > MAX_WIDTH) { canvas.width = MAX_WIDTH; canvas.height = img.height * scaleSize; } else { canvas.width = img.width; canvas.height = img.height; }
+                    const ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
                     callback(canvas.toDataURL('image/jpeg', 0.7));
                 }
             }
@@ -371,55 +350,45 @@
                 let res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, { headers: { "X-Master-Key": MASTER_KEY } });
                 if(!res.ok) throw new Error("API Error");
                 let json = await res.json();
-                let d = json.record;
-                data = { ...data, ...d }; // Merge defaults
-                if(!data.crKeys) data.crKeys = []; 
-                renderAll();
-                updateSyncStatus('success');
+                data = { ...data, ...json.record };
+                if(!data.crKeys) data.crKeys = [];
+                renderAll(); updateSyncStatus('success');
             } catch(e) { updateSyncStatus('fail'); }
         }
 
         async function saveData() {
             updateSyncStatus('loading');
             try {
-                await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, { 
-                    method: "PUT", headers: { "Content-Type": "application/json", "X-Master-Key": MASTER_KEY }, 
-                    body: JSON.stringify(data) 
-                });
-                updateSyncStatus('success');
-                renderAll();
+                await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, { method: "PUT", headers: { "Content-Type": "application/json", "X-Master-Key": MASTER_KEY }, body: JSON.stringify(data) });
+                updateSyncStatus('success'); renderAll();
             } catch(e) { updateSyncStatus('fail'); alert("Save Failed!"); }
         }
 
         // --- RENDERERS ---
         function renderAll() {
-            // Permission Based Visibility
             document.querySelectorAll('.admin-form').forEach(f => {
                 const section = f.getAttribute('data-perm');
-                if (f.id === 'att-controls') return; // Handled separately
+                if (f.id === 'att-controls') return; 
                 f.style.display = canEdit(section) ? 'block' : 'none';
             });
 
-            // Attendance Controls
-            const attControls = document.getElementById('att-controls');
-            attControls.style.display = canEdit('attendance') ? 'block' : 'none';
-
-            // Delete Buttons Visibility
-            const setDelBtn = (cls, section) => {
-                document.querySelectorAll(cls).forEach(b => b.style.display = canEdit(section) ? 'inline-block' : 'none');
-            };
-            
-            // Action Column Visibility
+            document.getElementById('att-controls').style.display = canEdit('attendance') ? 'block' : 'none';
             document.querySelectorAll('.action-col').forEach(e => e.style.display = canEdit('routine') ? 'table-cell' : 'none');
 
-            // --- ROUTINE ---
-            const rBody = document.getElementById('routine-body'); rBody.innerHTML='';
-            data.routine.forEach((i,x) => {
-                rBody.innerHTML += `<tr><td><b>${i.day}</b></td><td>${i.sub}</td><td>${i.room}</td><td class="action-col"><button class="delete-btn" style="color:red;border:none;background:none;cursor:pointer;" onclick="del('routine',${x})">🗑️</button></td></tr>`;
-            });
-            setDelBtn('.delete-btn', 'routine'); // Logic needs refining for per-item, but simpler here: redraw handles it
+            // --- ROUTINE SPLIT ---
+            const offBody = document.getElementById('routine-off-body');
+            const onBody = document.getElementById('routine-on-body');
+            offBody.innerHTML = ''; onBody.innerHTML = '';
 
-            // --- STUDENTS ---
+            data.routine.forEach((i, x) => {
+                const delBtn = canEdit('routine') ? `<button onclick="del('routine',${x})" style="color:red;border:none;background:none;cursor:pointer;">🗑️</button>` : '';
+                const row = `<tr><td><b>${i.day}</b></td><td>${i.sub}</td><td>${i.room}</td><td class="action-col">${delBtn}</td></tr>`;
+                
+                if (i.type === 'Online') onBody.innerHTML += row;
+                else offBody.innerHTML += row;
+            });
+
+            // Students
             const stuL = document.getElementById('student-list'); stuL.innerHTML='';
             data.student.forEach((s,x) => {
                 let img = s.img || 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png';
@@ -430,7 +399,7 @@
                 </div>`;
             });
 
-            // --- TEACHERS ---
+            // Teachers
             const tL = document.getElementById('teacher-list'); tL.innerHTML='';
             data.teacher.forEach((t,x) => {
                 let img = t.img || 'https://cdn-icons-png.flaticon.com/512/1995/1995539.png';
@@ -441,84 +410,55 @@
                 </div>`;
             });
 
-            // --- NOTICES ---
+            // Notices
             const nList = document.getElementById('notice-list'); nList.innerHTML = '';
             data.notice.slice().reverse().forEach((n, x) => {
                 let btns = canEdit('notice') ? `<button onclick="del('notice',${data.notice.length-1-x})" style="color:red; background:none; border:none; cursor:pointer; margin-top:5px;">Delete</button>` : '';
-                nList.innerHTML += `<div class="card" style="border-left: 4px solid #3b82f6;">
-                    <b>${n.title}</b> <span style="font-size:0.75rem; float:right; color:#888;">${n.date}</span>
-                    <p style="margin:5px 0 0; font-size:0.9rem; color:#475569;">${n.desc}</p>${btns}
-                </div>`;
+                nList.innerHTML += `<div class="card" style="border-left: 4px solid #3b82f6;"><b>${n.title}</b> <span style="font-size:0.75rem; float:right; color:#888;">${n.date}</span><p style="margin:5px 0 0; font-size:0.9rem; color:#475569;">${n.desc}</p>${btns}</div>`;
             });
 
-            // --- FEED ---
+            // Feed
             const feed = document.getElementById('activity-feed'); feed.innerHTML='';
             if(data.notice.length) {
                 feed.innerHTML += `<div style="background:#dbeafe; padding:15px; border-radius:8px; border:1px solid #93c5fd; color:#1e40af; margin-bottom:15px;">📢 <b>Latest:</b> ${data.notice[data.notice.length-1].title}</div>`;
             }
 
-            // --- ATTENDANCE HISTORY ---
+            // Attendance
             const attH = document.getElementById('attendance-history'); attH.innerHTML='';
             data.attendance.slice().reverse().forEach((a,i) => {
                 let ri = data.attendance.length - 1 - i;
                 let btns = canEdit('attendance') ? `<button onclick="del('attendance',${ri})" style="color:red; background:none; border:none; cursor:pointer;">🗑️</button>` : '';
-                attH.innerHTML += `<div class="card" style="padding:15px; border-left:4px solid var(--active-bg);">
-                    <div style="display:flex; justify-content:space-between; align-items:center;">
-                        <div><b>${a.subject}</b> <small>(${a.date})</small><br><small>Present: ${a.presentIDs.length} / ${data.student.length}</small></div>
-                        <div><button onclick="generatePDF(${ri})" style="background:#334155; color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer;">PDF</button> ${btns}</div>
-                    </div>
-                </div>`;
+                attH.innerHTML += `<div class="card" style="padding:15px; border-left:4px solid var(--active-bg);"><div style="display:flex; justify-content:space-between; align-items:center;"><div><b>${a.subject}</b> <small>(${a.date})</small><br><small>Present: ${a.presentIDs.length} / ${data.student.length}</small></div><div><button onclick="generatePDF(${ri})" style="background:#334155; color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer;">PDF</button> ${btns}</div></div></div>`;
             });
 
-            // --- ATT GRID ---
+            // Att Grid
             const grid = document.getElementById('attendance-grid');
-            if(grid.innerHTML === '') {
-                data.student.forEach(s => {
-                    grid.innerHTML += `<div id="att-stu-${s.id}" class="att-student" onclick="toggleAttStatus('${s.id}')">${s.name}<br><small>${s.id}</small></div>`;
-                });
-            }
+            if(grid.innerHTML === '') { data.student.forEach(s => { grid.innerHTML += `<div id="att-stu-${s.id}" class="att-student" onclick="toggleAttStatus('${s.id}')">${s.name}<br><small>${s.id}</small></div>`; }); }
 
-            // --- OTHERS ---
+            // Resources & Polls
             const rL=document.getElementById('resource-list'); rL.innerHTML=''; 
-            data.resources.forEach((r,x)=>{
-                let btns = canEdit('academic') ? `<button onclick="del('resources',${x})" style="float:right;color:red;background:none;border:none;">Del</button>` : '';
-                rL.innerHTML+=`<div class="card"><a href="${r.url}" target="_blank" style="text-decoration:none; color:#2563eb; font-weight:bold;">📄 ${r.title}</a> ${btns}</div>`
-            });
+            data.resources.forEach((r,x)=>{ let btns = canEdit('academic') ? `<button onclick="del('resources',${x})" style="float:right;color:red;background:none;border:none;">Del</button>` : ''; rL.innerHTML+=`<div class="card"><a href="${r.url}" target="_blank" style="text-decoration:none; color:#2563eb; font-weight:bold;">📄 ${r.title}</a> ${btns}</div>` });
 
             const cList = document.getElementById('course-list'); cList.innerHTML = ''; 
-            data.subjects.forEach((s,x)=>{
-                let btns = canEdit('academic') ? `<button onclick="del('subjects',${x})" style="float:right;color:red;background:none;border:none;">Del</button>` : '';
-                cList.innerHTML+=`<div class="card"><b>${s.name}</b> (${s.code}) <a href="${s.link}" target="_blank">Link</a> ${btns}</div>`
-            });
+            data.subjects.forEach((s,x)=>{ let btns = canEdit('academic') ? `<button onclick="del('subjects',${x})" style="float:right;color:red;background:none;border:none;">Del</button>` : ''; cList.innerHTML+=`<div class="card"><b>${s.name}</b> (${s.code}) <a href="${s.link}" target="_blank">Link</a> ${btns}</div>` });
             
             const pList = document.getElementById('poll-list'); pList.innerHTML = ''; 
-            data.polls.forEach((p,x)=>{
-                let btns = canEdit('polls') ? `<button onclick="del('polls',${x})" style="float:right;color:red;background:none;border:none;">Del</button>` : '';
-                pList.innerHTML+=`<div class="card"><b>${p.question}</b> ${btns}</div>`
-            });
+            data.polls.forEach((p,x)=>{ let btns = canEdit('polls') ? `<button onclick="del('polls',${x})" style="float:right;color:red;background:none;border:none;">Del</button>` : ''; pList.innerHTML+=`<div class="card"><b>${p.question}</b> ${btns}</div>` });
         }
 
         // --- ACTIONS ---
         function toggleAttStatus(id) {
             const el = document.getElementById('att-stu-'+id);
-            if(tempAttendance.has(id)) { tempAttendance.delete(id); el.classList.remove('present'); }
-            else { tempAttendance.add(id); el.classList.add('present'); }
+            if(tempAttendance.has(id)) { tempAttendance.delete(id); el.classList.remove('present'); } else { tempAttendance.add(id); el.classList.add('present'); }
         }
         function selectAllAtt(state) {
-            data.student.forEach(s => {
-                const el = document.getElementById('att-stu-'+s.id);
-                if(state) { tempAttendance.add(s.id); el.classList.add('present'); }
-                else { tempAttendance.delete(s.id); el.classList.remove('present'); }
-            });
+            data.student.forEach(s => { const el = document.getElementById('att-stu-'+s.id); if(state) { tempAttendance.add(s.id); el.classList.add('present'); } else { tempAttendance.delete(s.id); el.classList.remove('present'); } });
         }
         function saveAttendance() {
-            const d = document.getElementById('att-date').value;
-            const s = document.getElementById('att-subject').value;
+            const d = document.getElementById('att-date').value; const s = document.getElementById('att-subject').value;
             if(!d || !s) return alert("Date & Subject Needed!");
             data.attendance.push({ date: d, subject: s, presentIDs: Array.from(tempAttendance) });
-            tempAttendance.clear();
-            document.querySelectorAll('.att-student').forEach(e => e.classList.remove('present'));
-            saveData();
+            tempAttendance.clear(); document.querySelectorAll('.att-student').forEach(e => e.classList.remove('present')); saveData();
         }
 
         function handleStudentSubmit() {
@@ -536,7 +476,7 @@
             if(f) compressImage(f, (url) => saveT(url)); else saveT('');
         }
 
-        function addRoutine(){ data.routine.push({day:document.getElementById('r-day').value, sub:document.getElementById('r-sub').value, room:document.getElementById('r-room').value}); saveData(); }
+        function addRoutine(){ data.routine.push({type: document.getElementById('r-type').value, day:document.getElementById('r-day').value, sub:document.getElementById('r-sub').value, room:document.getElementById('r-room').value}); saveData(); }
         function addSubject(){ data.subjects.push({name:document.getElementById('sub-name').value, code:document.getElementById('sub-code').value, link:document.getElementById('sub-link').value}); saveData(); }
         function addResource(){ data.resources.push({title:document.getElementById('res-title').value, url:document.getElementById('res-url').value}); saveData(); }
         function addNotice(){ data.notice.push({date:document.getElementById('n-date').value, title:document.getElementById('n-title').value, desc:document.getElementById('n-desc').value}); saveData(); }
@@ -544,8 +484,7 @@
         function del(key, idx) { if(confirm("Delete?")) { data[key].splice(idx,1); saveData(); } }
         
         function generatePDF(i) {
-            const r = data.attendance[i];
-            const d = document.createElement('div');
+            const r = data.attendance[i]; const d = document.createElement('div');
             d.innerHTML = `<h2>Attendance: ${r.subject}</h2><p>Date: ${r.date}</p><hr><ul>${data.student.map(s => `<li style="color:${r.presentIDs.includes(s.id)?'green':'red'}">${s.name} (${s.id}) - ${r.presentIDs.includes(s.id)?'P':'A'}</li>`).join('')}</ul>`;
             html2pdf().from(d).save(`Att_${r.subject}.pdf`);
         }
@@ -558,13 +497,9 @@
             document.getElementById('btn-'+id).classList.add('active');
             if(window.innerWidth < 768) toggleSidebar();
         }
-        function toggleSidebar() {
-            document.getElementById('sidebar').classList.toggle('open');
-            document.querySelector('.overlay').classList.toggle('active');
-        }
+        function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); document.querySelector('.overlay').classList.toggle('active'); }
         function updateSyncStatus(status) {
-            const dot = document.getElementById('sync-dot');
-            const txt = document.getElementById('sync-text');
+            const dot = document.getElementById('sync-dot'); const txt = document.getElementById('sync-text');
             if(status === 'success') { dot.classList.add('online'); txt.innerText = "SYNC ACTIVE"; txt.style.color = "#22c55e"; } 
             else { dot.classList.remove('online'); txt.innerText = "SYNC FAILED"; txt.style.color = "#ef4444"; }
         }
