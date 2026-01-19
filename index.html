@@ -32,13 +32,10 @@
         header h1 { margin: 0; font-size: 1.4rem; letter-spacing: 1px; }
         header p { margin: 5px 0 0; font-size: 0.9rem; opacity: 0.9; }
 
-        /* Status Indicator */
-        #status-indicator {
-            position: absolute; top: 10px; left: 10px;
-            font-size: 0.7rem; padding: 4px 8px; border-radius: 12px;
-            background: #e74c3c; color: white; display: flex; align-items: center; gap: 5px;
-        }
-        .status-dot { width: 8px; height: 8px; border-radius: 50%; background: white; display: inline-block; }
+        /* Loader */
+        #loader { display: flex; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.9); z-index: 2000; justify-content: center; align-items: center; flex-direction: column; }
+        .spinner { border: 5px solid #f3f3f3; border-top: 5px solid var(--accent-color); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
         /* Admin Toggle */
         #admin-toggle {
@@ -85,7 +82,7 @@
         table { width: 100%; border-collapse: collapse; background: white; margin-top: 10px; font-size: 0.9rem; }
         th { background-color: var(--secondary-color); color: var(--accent-color); padding: 10px; text-align: left; }
         td { padding: 10px; border-bottom: 1px solid #ddd; }
-        .card { background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); border-top: 3px solid var(--secondary-color); display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; position: relative;}
+        .card { background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); border-top: 3px solid var(--secondary-color); margin-bottom: 10px; position: relative;}
 
         /* Student Profile UI */
         .student-card-content { display: flex; align-items: center; }
@@ -123,11 +120,9 @@
 </head>
 <body>
 
-    <header>
-        <div id="status-indicator">
-            <span class="status-dot"></span> <span id="status-text">Offline</span>
-        </div>
+    <div id="loader"><div class="spinner"></div><p style="margin-top:10px;">Connecting to Server...</p></div>
 
+    <header>
         <h1>Uttara University</h1>
         <p>Dept. of EEE | Batch 2026</p>
         <button id="admin-toggle" onclick="toggleAdminMode()">⚙️ Admin</button>
@@ -256,112 +251,57 @@
             window.scrollTo(0,0);
         };
 
+        // ⚠️ YOUR API KEYS (Embedded as requested)
         const BIN_ID = "696dd4ea43b1c97be93a1b9a";
         const MASTER_KEY = "$2a$10$KTYAb9AoPKihFgFBHUpPZ.w4pn1jq7NHptoZVp4iPFf3u0k6xmWly";
-        const PREFIX = "uu_eee_hybrid_";
 
-        // GLOBAL DATA
+        // GLOBAL VARS
         let routineData=[], studentData=[], teacherData=[], noticeData=[], attendanceData=[], pollData=[], resourcesData=[], subjectData=[], marksData={};
         let isAdmin = false;
         let editStudentIndex = -1;
-        let isOnline = false;
 
-        // --- HYBRID DATA SYNC ---
-        // 1. Load Local Data First (Instant Load)
-        function loadLocalData() {
-            try {
-                routineData = JSON.parse(localStorage.getItem(PREFIX+'routine')) || [];
-                studentData = JSON.parse(localStorage.getItem(PREFIX+'student')) || [];
-                teacherData = JSON.parse(localStorage.getItem(PREFIX+'teacher')) || [];
-                noticeData = JSON.parse(localStorage.getItem(PREFIX+'notice')) || [];
-                attendanceData = JSON.parse(localStorage.getItem(PREFIX+'attendance')) || [];
-                pollData = JSON.parse(localStorage.getItem(PREFIX+'polls')) || [];
-                resourcesData = JSON.parse(localStorage.getItem(PREFIX+'resources')) || [];
-                subjectData = JSON.parse(localStorage.getItem(PREFIX+'subjects')) || [];
-                marksData = JSON.parse(localStorage.getItem(PREFIX+'marks')) || {};
-            } catch(e) { console.log('Local Load Error'); }
-            renderAll();
-        }
-
-        // 2. Fetch Server Data (Background)
-        async function fetchServerData() {
-            updateStatus(false);
+        // --- SERVER SYNC ---
+        async function fetchData() {
+            document.getElementById('loader').style.display = 'flex';
             try {
                 let res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, {
                     headers: { "X-Master-Key": MASTER_KEY }
                 });
-                if(res.ok) {
-                    let json = await res.json();
-                    let d = json.record;
-                    // Update variables
-                    routineData = d.routine || [];
-                    studentData = d.student || [];
-                    teacherData = d.teacher || [];
-                    noticeData = d.notice || [];
-                    attendanceData = d.attendance || [];
-                    pollData = d.polls || [];
-                    resourcesData = d.resources || [];
-                    subjectData = d.subjects || [];
-                    marksData = d.marks || {};
-                    
-                    // Save to local for next time
-                    saveToLocal(); 
-                    renderAll();
-                    updateStatus(true);
-                }
+                if(!res.ok) throw new Error("Key Error");
+                let json = await res.json();
+                let d = json.record;
+
+                routineData = d.routine || [];
+                studentData = d.student || [];
+                teacherData = d.teacher || [];
+                noticeData = d.notice || [];
+                attendanceData = d.attendance || [];
+                pollData = d.polls || [];
+                resourcesData = d.resources || [];
+                subjectData = d.subjects || [];
+                marksData = d.marks || {};
+
+                renderAll();
             } catch(e) {
-                console.log("Server fetch failed, running offline.");
-                updateStatus(false);
+                console.error(e);
+                alert("Connection Failed! Please check your internet.");
             }
+            document.getElementById('loader').style.display = 'none';
         }
 
-        // 3. Save Function (Tries Server, Fallbacks to Local)
-        async function saveData() {
-            saveToLocal(); // Always save local first
-            renderAll();   // Update UI immediately
-
+        async function pushToServer() {
             let payload = {
                 routine: routineData, student: studentData, teacher: teacherData,
                 notice: noticeData, attendance: attendanceData, polls: pollData,
                 resources: resourcesData, subjects: subjectData, marks: marksData
             };
-
             try {
-                let res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
+                await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
                     method: "PUT",
                     headers: { "Content-Type": "application/json", "X-Master-Key": MASTER_KEY },
                     body: JSON.stringify(payload)
                 });
-                if(res.ok) updateStatus(true);
-                else updateStatus(false);
-            } catch(e) {
-                updateStatus(false); // Failed to sync
-            }
-        }
-
-        function saveToLocal() {
-            localStorage.setItem(PREFIX+'routine', JSON.stringify(routineData));
-            localStorage.setItem(PREFIX+'student', JSON.stringify(studentData));
-            localStorage.setItem(PREFIX+'teacher', JSON.stringify(teacherData));
-            localStorage.setItem(PREFIX+'notice', JSON.stringify(noticeData));
-            localStorage.setItem(PREFIX+'attendance', JSON.stringify(attendanceData));
-            localStorage.setItem(PREFIX+'polls', JSON.stringify(pollData));
-            localStorage.setItem(PREFIX+'resources', JSON.stringify(resourcesData));
-            localStorage.setItem(PREFIX+'subjects', JSON.stringify(subjectData));
-            localStorage.setItem(PREFIX+'marks', JSON.stringify(marksData));
-        }
-
-        function updateStatus(online) {
-            isOnline = online;
-            const ind = document.getElementById('status-indicator');
-            const txt = document.getElementById('status-text');
-            if(online) {
-                ind.style.background = "#27ae60"; // Green
-                txt.innerText = "Online (Synced)";
-            } else {
-                ind.style.background = "#e74c3c"; // Red
-                txt.innerText = "Offline (Local)";
-            }
+            } catch(e) { console.log("Save failed"); }
         }
 
         // --- RENDERERS ---
@@ -421,19 +361,6 @@
             updateAdminView();
         }
 
-        function renderOthers() {
-            const cList = document.getElementById('course-list'); cList.innerHTML = '';
-            subjectData.forEach((sub, x) => {
-                cList.innerHTML += `<div class="subject-card"><div style="display:flex;justify-content:space-between;"><div><b>${sub.name}</b><br><small>${sub.code}</small></div><a href="${sub.link}" class="link-btn" target="_blank">Syllabus</a></div><div style="background:#ecf0f1;height:10px;border-radius:5px;margin:10px 0;"><div class="progress-bar" style="width:${sub.progress}%"></div></div><div style="font-size:0.8rem;display:flex;justify-content:space-between;"><span>Status: <b>${sub.status}</b></span><span>${sub.progress}%</span></div><div class="admin-form" style="display:${isAdmin?'block':'none'};margin-top:5px;padding:0;background:none;box-shadow:none;"><input type="number" id="pv-${x}" value="${sub.progress}" style="width:40px"><input type="text" id="ps-${x}" value="${sub.status}" style="width:100px"><button onclick="updProg(${x})" style="width:auto;padding:3px;">Update</button><button onclick="del('subject',${x})" style="background:#e74c3c;color:white;border:none;padding:3px;margin-left:5px;">Del</button></div></div>`;
-            });
-            const resL = document.getElementById('resource-list'); resL.innerHTML=''; resourcesData.forEach((r,x)=> resL.innerHTML+=`<div class="card"><b>${r.title}</b><div><a href="${r.url}" target="_blank" class="link-btn">Open</a><button class="delete-btn" onclick="del('resources',${x})">🗑️</button></div></div>`);
-            const notL = document.getElementById('notice-list'); notL.innerHTML=''; noticeData.slice().reverse().forEach((n,x)=> notL.innerHTML+=`<div class="card" style="display:block;border-left:4px solid #e74c3c;"><b>${n.title}</b> <span style="font-size:0.7rem;background:#eee;padding:2px;">${n.date}</span><p style="margin:5px 0;font-size:0.9rem;">${n.desc}</p><button class="delete-btn" onclick="del('notice',${noticeData.length-1-x})" style="float:right;">Del</button><div style="clear:both;"></div></div>`);
-            
-            const tL = document.getElementById('teacher-list'); tL.innerHTML=''; teacherData.forEach((t,x)=> tL.innerHTML+=`<div class="card"><div><b>${t.name}</b><br><small>${t.post}</small></div><button class="delete-btn" onclick="del('teacher',${x})">🗑️</button></div>`);
-            const attList = document.getElementById('attendance-student-list'); attList.innerHTML=''; studentData.forEach(s=> attList.innerHTML+=`<div style="display:flex;justify-content:space-between;padding:5px;"><span>${s.name}</span><input type="checkbox" value="${s.id}" checked class="att-check"></div>`);
-            const attH = document.getElementById('attendance-history'); attH.innerHTML=''; attendanceData.slice().reverse().forEach((a,i)=>{const ri=attendanceData.length-1-i; attH.innerHTML+=`<div class="card"><b>${a.subject}</b><br>${a.date} (P: ${a.presentIDs.length})<button class="delete-btn" onclick="del('attendance',${ri})" style="float:right">Del</button></div>`;});
-        }
-
         // --- FUNCTIONS ---
         function handleStudentSubmit() {
             const n=v('s-name'), i=v('s-id'), d=v('s-dip'), p=v('s-phone');
@@ -453,7 +380,7 @@
         function saveStudentData(name, id, dip, phone, img) {
             if(editStudentIndex === -1) studentData.push({name, id, dip, phone, img});
             else studentData[editStudentIndex] = {name, id, dip, phone, img};
-            resetStudentForm(); saveData();
+            resetStudentForm(); pushToServer(); renderAll();
         }
 
         function editStudent(index) {
@@ -480,7 +407,20 @@
             if(localStorage.getItem('voted_poll_'+pi)) return alert("You have already voted!");
             pollData[pi].options[oi].votes++;
             localStorage.setItem('voted_poll_'+pi, 'true');
-            saveData();
+            pushToServer(); renderAll();
+        }
+
+        function renderOthers() {
+            const cList = document.getElementById('course-list'); cList.innerHTML = '';
+            subjectData.forEach((sub, x) => {
+                cList.innerHTML += `<div class="subject-card"><div style="display:flex;justify-content:space-between;"><div><b>${sub.name}</b><br><small>${sub.code}</small></div><a href="${sub.link}" class="link-btn" target="_blank">Syllabus</a></div><div style="background:#ecf0f1;height:10px;border-radius:5px;margin:10px 0;"><div class="progress-bar" style="width:${sub.progress}%"></div></div><div style="font-size:0.8rem;display:flex;justify-content:space-between;"><span>Status: <b>${sub.status}</b></span><span>${sub.progress}%</span></div><div class="admin-form" style="display:${isAdmin?'block':'none'};margin-top:5px;padding:0;background:none;box-shadow:none;"><input type="number" id="pv-${x}" value="${sub.progress}" style="width:40px"><input type="text" id="ps-${x}" value="${sub.status}" style="width:100px"><button onclick="updProg(${x})" style="width:auto;padding:3px;">Update</button><button onclick="del('subject',${x})" style="background:#e74c3c;color:white;border:none;padding:3px;margin-left:5px;">Del</button></div></div>`;
+            });
+            const resL = document.getElementById('resource-list'); resL.innerHTML=''; resourcesData.forEach((r,x)=> resL.innerHTML+=`<div class="card"><b>${r.title}</b><div><a href="${r.url}" target="_blank" class="link-btn">Open</a><button class="delete-btn" onclick="del('resources',${x})">🗑️</button></div></div>`);
+            const notL = document.getElementById('notice-list'); notL.innerHTML=''; noticeData.slice().reverse().forEach((n,x)=> notL.innerHTML+=`<div class="card" style="display:block;border-left:4px solid #e74c3c;"><b>${n.title}</b> <span style="font-size:0.7rem;background:#eee;padding:2px;">${n.date}</span><p style="margin:5px 0;font-size:0.9rem;">${n.desc}</p><button class="delete-btn" onclick="del('notice',${noticeData.length-1-x})" style="float:right;">Del</button><div style="clear:both;"></div></div>`);
+            
+            const tL = document.getElementById('teacher-list'); tL.innerHTML=''; teacherData.forEach((t,x)=> tL.innerHTML+=`<div class="card"><div><b>${t.name}</b><br><small>${t.post}</small></div><button class="delete-btn" onclick="del('teacher',${x})">🗑️</button></div>`);
+            const attList = document.getElementById('attendance-student-list'); attList.innerHTML=''; studentData.forEach(s=> attList.innerHTML+=`<div style="display:flex;justify-content:space-between;padding:5px;"><span>${s.name}</span><input type="checkbox" value="${s.id}" checked class="att-check"></div>`);
+            const attH = document.getElementById('attendance-history'); attH.innerHTML=''; attendanceData.slice().reverse().forEach((a,i)=>{const ri=attendanceData.length-1-i; attH.innerHTML+=`<div class="card"><b>${a.subject}</b><br>${a.date} (P: ${a.presentIDs.length})<button class="delete-btn" onclick="del('attendance',${ri})" style="float:right">Del</button></div>`;});
         }
 
         // --- UTILS ---
@@ -496,14 +436,14 @@
         function pdf(id,n){ const e=document.getElementById(id); const w=document.createElement('div'); w.innerHTML='<h3 style="text-align:center">UU EEE</h3>'; w.appendChild(e.cloneNode(true)); html2pdf().from(w).save(n+'.pdf'); }
         function downloadGeneralPDF(id, n) { pdf(id,n); }
 
-        function addRoutine(){ if(v('r-day')) { routineData.push({day:v('r-day'),sub:v('r-sub'),room:v('r-room')}); saveData(); } }
-        function addSubject(){ if(v('sub-name')) { subjectData.push({name:v('sub-name'),code:v('sub-code'),link:v('sub-link'),progress:0,status:'Start'}); saveData(); } }
-        function addResource(){ if(v('res-title')) { resourcesData.push({title:v('res-title'),url:v('res-url')}); saveData(); } }
-        function addTeacher(){ if(v('t-name')) { teacherData.push({name:v('t-name'),post:v('t-post'),phone:v('t-phone')}); saveData(); } }
-        function addNotice(){ if(v('n-title')) { noticeData.push({date:v('n-date'),title:v('n-title'),desc:v('n-desc')}); saveData(); } }
-        function addPoll(){ if(v('poll-quest')) { pollData.push({question:v('poll-quest'),options:document.getElementById('poll-opts').value.split(',').map(t=>({text:t.trim(),votes:0}))}); saveData(); } }
-        function saveAttendance(){ const d=v('att-date'); if(!d)return alert('Date?'); let p=[]; document.querySelectorAll('.att-check:checked').forEach(c=>p.push(c.value)); attendanceData.push({date:d,subject:v('att-subject'),presentIDs:p}); saveData(); }
-        function updProg(x){ subjectData[x].progress=v(`pv-${x}`); subjectData[x].status=v(`ps-${x}`); saveData(); }
+        function addRoutine(){ if(v('r-day')) { routineData.push({day:v('r-day'),sub:v('r-sub'),room:v('r-room')}); pushToServer(); renderAll(); } }
+        function addSubject(){ if(v('sub-name')) { subjectData.push({name:v('sub-name'),code:v('sub-code'),link:v('sub-link'),progress:0,status:'Start'}); pushToServer(); renderAll(); } }
+        function addResource(){ if(v('res-title')) { resourcesData.push({title:v('res-title'),url:v('res-url')}); pushToServer(); renderAll(); } }
+        function addTeacher(){ if(v('t-name')) { teacherData.push({name:v('t-name'),post:v('t-post'),phone:v('t-phone')}); pushToServer(); renderAll(); } }
+        function addNotice(){ if(v('n-title')) { noticeData.push({date:v('n-date'),title:v('n-title'),desc:v('n-desc')}); pushToServer(); renderAll(); } }
+        function addPoll(){ if(v('poll-quest')) { pollData.push({question:v('poll-quest'),options:document.getElementById('poll-opts').value.split(',').map(t=>({text:t.trim(),votes:0}))}); pushToServer(); renderAll(); } }
+        function saveAttendance(){ const d=v('att-date'); if(!d)return alert('Date?'); let p=[]; document.querySelectorAll('.att-check:checked').forEach(c=>p.push(c.value)); attendanceData.push({date:d,subject:v('att-subject'),presentIDs:p}); pushToServer(); renderAll(); }
+        function updProg(x){ subjectData[x].progress=v(`pv-${x}`); subjectData[x].status=v(`ps-${x}`); pushToServer(); renderAll(); }
 
         function del(k,i) {
             if(!confirm('Sure?')) return;
@@ -511,12 +451,11 @@
             else if(k=='subjects') subjectData.splice(i,1); else if(k=='resources') resourcesData.splice(i,1);
             else if(k=='teacher') teacherData.splice(i,1); else if(k=='notice') noticeData.splice(i,1);
             else if(k=='attendance') attendanceData.splice(i,1); else if(k=='polls') pollData.splice(i,1);
-            saveData();
+            pushToServer(); renderAll();
         }
 
-        // INIT
-        loadLocalData();
-        fetchServerData();
+        // START
+        fetchData();
     </script>
 </body>
 </html>
