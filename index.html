@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>UU EEE Dept App (Pro)</title>
+    <title>UU EEE Dept App</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
     <style>
@@ -12,15 +12,15 @@
             --primary-color: #0f2027; 
             --secondary-color: #203a43; 
             --accent-color: #ffc107; 
-            --text-light: #ecf0f1;
             --bg-color: #f0f2f5;
-            --notice-bg: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --success-color: #27ae60;
+            --danger-color: #e74c3c;
         }
 
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0 0 80px; background: var(--bg-color); color: #333; }
+        body { font-family: 'Segoe UI', sans-serif; margin: 0; padding: 0 0 80px; background: var(--bg-color); color: #333; }
 
         /* Header */
-        header { background: linear-gradient(to right, #203a43, #2c5364); color: var(--text-light); padding: 15px; text-align: center; border-bottom: 4px solid var(--accent-color); position: relative; }
+        header { background: linear-gradient(to right, #203a43, #2c5364); color: white; padding: 15px; text-align: center; border-bottom: 4px solid var(--accent-color); }
         
         /* Loader */
         #loader { display: flex; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.95); z-index: 9999; justify-content: center; align-items: center; flex-direction: column; }
@@ -30,69 +30,107 @@
         /* Admin Toggle */
         #admin-toggle { position: absolute; top: 15px; right: 15px; background: rgba(255,255,255,0.2); color: white; border: 1px solid white; padding: 4px 8px; cursor: pointer; border-radius: 4px; font-size: 0.7rem; }
 
-        /* Navigation */
-        nav { display: flex; justify-content: flex-start; background-color: var(--primary-color); padding: 8px 0; position: fixed; bottom: 0; width: 100%; z-index: 1000; box-shadow: 0 -2px 10px rgba(0,0,0,0.2); overflow-x: auto; white-space: nowrap; }
+        /* Nav */
+        nav { display: flex; background: var(--primary-color); padding: 8px 0; position: fixed; bottom: 0; width: 100%; z-index: 1000; overflow-x: auto; white-space: nowrap; box-shadow: 0 -2px 10px rgba(0,0,0,0.2); }
         nav::-webkit-scrollbar { display: none; }
-        nav button { background: none; border: none; color: #bdc3c7; font-size: 0.65rem; cursor: pointer; padding: 5px 15px; display: flex; flex-direction: column; align-items: center; min-width: 65px; flex-shrink: 0; }
+        nav button { background: none; border: none; color: #bdc3c7; font-size: 0.65rem; padding: 5px 15px; display: flex; flex-direction: column; align-items: center; min-width: 65px; flex-shrink: 0; }
         nav button span { font-size: 1.2rem; margin-bottom: 3px; }
         nav button.active { color: var(--accent-color); font-weight: bold; }
 
-        /* Content & Forms */
+        /* Content */
         .content-section { display: none; padding: 15px; max-width: 800px; margin: 0 auto; animation: fadeIn 0.4s; }
         .content-section.active-section { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
+        /* Forms & Inputs */
         .admin-form { display: none; background: white; padding: 15px; margin-bottom: 20px; border-radius: 8px; border-left: 5px solid var(--accent-color); box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
         .admin-form input, .admin-form select, .admin-form textarea { padding: 10px; margin: 5px 0; width: 90%; border: 1px solid #ddd; border-radius: 4px; }
         .admin-form button { background: var(--secondary-color); color: var(--accent-color); border: none; padding: 10px; margin-top: 10px; width: 100%; font-weight: bold; cursor: pointer; }
 
-        /* UI Elements */
-        .section-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #ddd; padding-bottom: 5px; margin-bottom: 15px; }
-        .print-btn { background: #34495e; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 0.8rem; }
-        .delete-btn { background: #e74c3c; color: white; border: none; padding: 4px 8px; border-radius: 4px; display: none; margin-left: auto; cursor:pointer; font-size:0.8rem;}
-        .edit-btn { background: #f39c12; color: white; border: none; padding: 4px 8px; border-radius: 4px; display: none; margin-right: 5px; cursor:pointer; font-size:0.8rem;}
+        /* Cards & Lists */
+        .card { background: white; padding: 15px; border-radius: 8px; margin-bottom: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); border-top: 3px solid var(--secondary-color); position: relative; }
+        .section-header { margin-bottom: 15px; border-bottom: 2px solid #ddd; padding-bottom: 5px; }
+        .section-header h2 { margin: 0; color: var(--secondary-color); }
+
+        /* Buttons */
+        .delete-btn { background: var(--danger-color); color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor:pointer; font-size: 0.8rem;}
+        .edit-btn { background: #f39c12; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor:pointer; font-size: 0.8rem; margin-right: 5px; }
         
-        table { width: 100%; border-collapse: collapse; background: white; margin-top: 10px; font-size: 0.9rem; }
-        th { background-color: var(--secondary-color); color: var(--accent-color); padding: 10px; text-align: left; }
+        /* Table */
+        table { width: 100%; border-collapse: collapse; background: white; font-size: 0.9rem; margin-bottom: 20px;}
+        th { background: var(--secondary-color); color: var(--accent-color); padding: 10px; text-align: left; }
         td { padding: 10px; border-bottom: 1px solid #ddd; }
-        
-        .card { background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); border-top: 3px solid var(--secondary-color); margin-bottom: 10px; position: relative;}
 
-        /* --- FEATURES UI --- */
-        /* Dashboard */
-        .notice-banner { background: var(--notice-bg); color: white; padding: 20px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(118, 75, 162, 0.4); }
-        .nb-date { background: rgba(255,255,255,0.2); padding: 2px 8px; border-radius: 20px; font-size: 0.8rem; }
-        .nb-title { font-size: 1.3rem; font-weight: bold; margin: 10px 0 5px; display: block; }
-        .activity-feed { margin-bottom: 30px; display: flex; flex-direction: column; gap: 10px; }
-        .act-card { padding: 15px; border-radius: 8px; color: white; cursor: pointer; background: linear-gradient(135deg, #f39c12, #d35400); }
+        /* --- IMPROVED ATTENDANCE UI --- */
+        .att-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 10px;
+            margin: 10px 0;
+            max-height: 300px;
+            overflow-y: auto;
+            padding: 5px;
+            border: 1px solid #eee;
+            background: #fafafa;
+        }
+        .att-student {
+            background: white;
+            border: 1px solid #ddd;
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: 0.2s;
+            user-select: none;
+        }
+        /* Present State */
+        .att-student.present {
+            background-color: var(--success-color);
+            color: white;
+            border-color: var(--success-color);
+            font-weight: bold;
+            box-shadow: 0 2px 5px rgba(39, 174, 96, 0.3);
+        }
+        .att-actions { display: flex; gap: 10px; margin-bottom: 10px; }
+        .att-btn-small { background: #555; color: white; border: none; padding: 5px 10px; border-radius: 4px; font-size: 0.7rem; cursor: pointer; }
 
-        /* Student */
+        /* History Card */
+        .history-card {
+            background: white; padding: 15px; border-radius: 8px; margin-bottom: 10px;
+            border-left: 5px solid var(--primary-color);
+            display: flex; justify-content: space-between; align-items: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .pdf-btn {
+            background: var(--accent-color); color: black; border: none; 
+            padding: 5px 10px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 0.8rem;
+        }
+
+        /* Student Profile */
         .student-card-content { display: flex; align-items: center; }
-        .student-img { width: 60px; height: 60px; border-radius: 50%; object-fit: cover; border: 2px solid var(--accent-color); margin-right: 15px; background: #eee; }
+        .student-img { width: 60px; height: 60px; border-radius: 50%; object-fit: cover; margin-right: 15px; background: #eee; border: 2px solid var(--accent-color); }
         .phone-link { color: #2980b9; font-weight: bold; cursor: pointer; text-decoration: underline; }
 
-        /* Academic & Marks */
-        .subject-card { background: white; padding: 15px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); border-left: 5px solid var(--secondary-color); }
-        .progress-bar { height: 100%; background: linear-gradient(90deg, var(--secondary-color), var(--accent-color)); width: 0%; transition: width 0.5s; }
-        .marks-container { display: none; margin-top: 15px; background: #f8f9fa; padding: 10px; border-radius: 8px; border: 1px dashed #bdc3c7; }
-        .marks-input { width: 40px; padding: 4px; text-align: center; border: 1px solid #ddd; border-radius: 4px; font-size: 0.8rem;}
-        
-        /* Polls */
-        .poll-card { background: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
-        .poll-bar { height: 100%; background: rgba(255, 193, 7, 0.2); transition: width 0.5s ease; position: absolute; left: 0; top: 0; }
-        .poll-option { background: #f8f9fa; border: 1px solid #ddd; padding: 10px; margin-bottom: 8px; border-radius: 6px; cursor: pointer; position: relative; overflow: hidden; }
+        /* Dashboard & Polls */
+        .notice-banner { background: var(--notice-bg); color: white; padding: 20px; border-radius: 12px; margin-bottom: 20px; }
+        .act-card { padding: 15px; border-radius: 8px; color: white; cursor: pointer; margin-bottom: 10px; }
+        .poll-card { background: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; }
+        .poll-bar { height: 100%; background: rgba(255, 193, 7, 0.3); position: absolute; top: 0; left: 0; }
+        .poll-option { background: #f8f9fa; border: 1px solid #ddd; padding: 10px; margin-bottom: 5px; border-radius: 6px; cursor: pointer; position: relative; overflow: hidden; }
         .poll-text { position: relative; z-index: 1; display: flex; justify-content: space-between; }
-        .poll-voted .poll-option { opacity: 0.7; cursor: not-allowed; }
+        .poll-voted .poll-option { opacity: 0.7; }
+
+        /* Academic */
+        .subject-card { background: white; padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 5px solid var(--secondary-color); }
+        .marks-container { display: none; margin-top: 15px; background: #f8f9fa; padding: 10px; border-radius: 8px; }
+        .marks-input { width: 40px; padding: 4px; text-align: center; border: 1px solid #ddd; border-radius: 4px; font-size: 0.8rem;}
 
     </style>
 </head>
 <body>
 
-    <div id="loader">
-        <div class="spinner"></div>
-        <p style="margin-top:15px; font-weight:bold;">Connecting to Server...</p>
-        <button onclick="location.reload()" style="margin-top:10px; padding:5px 10px; cursor:pointer;">Retry</button>
-    </div>
+    <div id="loader"><div class="spinner"></div><p style="margin-top:15px; font-weight:bold;">Syncing...</p></div>
 
     <header>
         <h1>Uttara University</h1>
@@ -101,98 +139,84 @@
     </header>
 
     <div id="home" class="content-section active-section">
-        <div class="section-header"><h2>🔥 Latest Updates</h2></div>
+        <div class="section-header"><h2>🔥 Updates</h2></div>
         <div id="activity-feed"></div>
 
-        <div class="section-header">
-            <h2>📅 Class Routine</h2>
-            <button class="print-btn" onclick="downloadGeneralPDF('routine-table', 'Class_Routine')">🖨️ PDF</button>
-        </div>
-        
+        <div class="section-header"><h2>📅 Class Routine</h2></div>
         <div class="admin-form">
             <h3>Add Class</h3>
             <input type="text" id="r-day" placeholder="Day (e.g. Sunday)">
             <input type="text" id="r-sub" placeholder="Subject">
             <input type="text" id="r-room" placeholder="Room">
-            <button onclick="addRoutine()">➕ Add Routine</button>
+            <button onclick="addRoutine()">➕ Add</button>
         </div>
-
-        <table id="routine-table" style="margin-bottom: 30px;">
-            <thead><tr><th>Day/Time</th><th>Subject</th><th class="action-col">Action</th></tr></thead>
-            <tbody id="routine-body"></tbody>
-        </table>
+        <table id="routine-table"><thead><tr><th>Day/Time</th><th>Subject</th><th class="action-col">Act</th></tr></thead><tbody id="routine-body"></tbody></table>
     </div>
 
     <div id="academic" class="content-section">
         <div class="admin-form">
             <h3>Add Course</h3>
-            <input type="text" id="sub-name" placeholder="Subject Name">
+            <input type="text" id="sub-name" placeholder="Name">
             <input type="text" id="sub-code" placeholder="Code">
-            <input type="text" id="sub-link" placeholder="Syllabus Link">
-            <button onclick="addSubject()">Add Course</button>
-            <hr>
-            <h3>Add Resource</h3>
+            <input type="text" id="sub-link" placeholder="Link">
+            <button onclick="addSubject()">Add</button>
+            <hr><h3>Add Resource</h3>
             <input type="text" id="res-title" placeholder="Title">
             <input type="text" id="res-url" placeholder="Link">
-            <button onclick="addResource()">Add Resource</button>
+            <button onclick="addResource()">Add</button>
         </div>
-        
-        <h2>📘 Active Courses & Marks</h2>
-        <div id="course-list"></div>
-
-        <h2 style="margin-top:30px;">📚 General Resources</h2>
-        <div id="resource-list"></div>
+        <h2>📘 Courses</h2><div id="course-list"></div>
+        <h2 style="margin-top:30px;">📚 Resources</h2><div id="resource-list"></div>
     </div>
 
     <div id="students" class="content-section">
         <div class="admin-form" id="student-form">
-            <h3>🎓 Manage Student</h3>
+            <h3>🎓 Student Info</h3>
             <input type="file" id="s-img-file" accept="image/*" style="margin-bottom:5px;">
             <input type="text" id="s-name" placeholder="Name">
             <input type="text" id="s-id" placeholder="ID">
-            <input type="text" id="s-dip" placeholder="Dip. Session (e.g. 19-20)">
+            <input type="text" id="s-dip" placeholder="Dip. Session">
             <input type="text" id="s-phone" placeholder="Phone">
             <button id="btn-student-action" onclick="handleStudentSubmit()">➕ Add Student</button>
             <button onclick="resetStudentForm()" style="background:#7f8c8d; width:auto;">Cancel</button>
         </div>
-        <div class="section-header"><h2>🎓 Student List</h2><button class="print-btn" onclick="downloadGeneralPDF('student-list', 'Student_List')">🖨️ PDF</button></div>
+        <div class="section-header"><h2>🎓 Student List</h2></div>
         <div id="student-list"></div>
     </div>
 
     <div id="teachers" class="content-section">
-        <div class="admin-form">
-            <input type="text" id="t-name" placeholder="Name"><input type="text" id="t-post" placeholder="Post"><input type="text" id="t-phone" placeholder="Phone">
-            <button onclick="addTeacher()">Add Teacher</button>
-        </div>
-        <div class="section-header"><h2>👨‍🏫 Faculty</h2><button class="print-btn" onclick="downloadGeneralPDF('teacher-list', 'Faculty_List')">🖨️ PDF</button></div>
+        <div class="admin-form"><input type="text" id="t-name" placeholder="Name"><input type="text" id="t-post" placeholder="Post"><input type="text" id="t-phone" placeholder="Phone"><button onclick="addTeacher()">Add</button></div>
+        <div class="section-header"><h2>👨‍🏫 Faculty</h2></div>
         <div id="teacher-list"></div>
     </div>
 
     <div id="notice" class="content-section">
-        <div class="admin-form">
-            <input type="date" id="n-date"><input type="text" id="n-title" placeholder="Title"><input type="text" id="n-desc" placeholder="Details">
-            <button onclick="addNotice()">Post Notice</button>
-        </div>
+        <div class="admin-form"><input type="date" id="n-date"><input type="text" id="n-title" placeholder="Title"><input type="text" id="n-desc" placeholder="Details"><button onclick="addNotice()">Post</button></div>
         <h2>🔔 Notice Board</h2><div id="notice-list"></div>
     </div>
 
     <div id="attendance" class="content-section">
-        <div class="admin-form">
+        <div class="admin-form" id="attendance-form-container">
             <h3>📝 New Attendance</h3>
             <input type="date" id="att-date" style="background:#eee;">
-            <input type="text" id="att-subject" placeholder="Subject Name">
-            <div id="attendance-student-list" style="max-height: 200px; overflow-y: scroll; margin: 10px 0; border: 1px solid #ddd;"></div>
+            <input type="text" id="att-subject" placeholder="Subject Name (e.g. Circuits)">
+            
+            <div class="att-actions">
+                <button class="att-btn-small" onclick="selectAllAtt(true)">Select All</button>
+                <button class="att-btn-small" onclick="selectAllAtt(false)">Clear All</button>
+            </div>
+            <p style="font-size:0.8rem; color:#666;">Tap name to mark present (Green)</p>
+            
+            <div id="attendance-grid" class="att-grid"></div>
+            
             <button onclick="saveAttendance()">💾 Save Record</button>
         </div>
-        <h2>📊 History</h2><div id="attendance-history"></div>
+        <h2>📊 History (PDF Available)</h2>
+        <div id="attendance-history"></div>
     </div>
 
     <div id="polls" class="content-section">
-        <div class="admin-form">
-            <input type="text" id="poll-quest" placeholder="Question">
-            <textarea id="poll-opts" placeholder="Options separated by comma"></textarea>
-            <button onclick="addPoll()">Create Poll</button>
-        </div>
+        <div class="admin-form"><input type="text" id="poll-quest" placeholder="Question"><textarea id="poll-opts" placeholder="Options (comma separated)"></textarea><button onclick="addPoll()">Create Poll</button></div>
         <h2>🗳️ Active Polls</h2><div id="poll-list"></div>
     </div>
 
@@ -216,86 +240,206 @@
             window.scrollTo(0,0);
         };
 
-        // --- NEW SERVER CREDENTIALS ---
         const BIN_ID = "696ddab4ae596e708fe5fa10"; 
         const MASTER_KEY = "$2a$10$KTYAb9AoPKihFgFBHUpPZ.w4pn1jq7NHptoZVp4iPFf3u0k6xmWly";
 
-        // GLOBAL DATA
+        // DATA VARS
         let routineData=[], studentData=[], teacherData=[], noticeData=[], attendanceData=[], pollData=[], resourcesData=[], subjectData=[], marksData={};
         let isAdmin = false;
         let editStudentIndex = -1;
 
-        // --- SERVER SYNC ---
+        // --- SERVER ---
         async function fetchData() {
             document.getElementById('loader').style.display = 'flex';
             try {
-                let res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, {
-                    headers: { "X-Master-Key": MASTER_KEY }
-                });
-                if(!res.ok) throw new Error("Server Error");
+                let res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, { headers: { "X-Master-Key": MASTER_KEY } });
+                if(!res.ok) throw new Error("API Error");
                 let json = await res.json();
                 let d = json.record;
-
-                // Sync data, fallback to empty arrays if new bin
-                routineData = d.routine || [];
-                studentData = d.student || [];
-                teacherData = d.teacher || [];
-                noticeData = d.notice || [];
-                attendanceData = d.attendance || [];
-                pollData = d.polls || [];
-                resourcesData = d.resources || [];
-                subjectData = d.subjects || [];
-                marksData = d.marks || {};
-
+                // Sync
+                routineData = d.routine || []; studentData = d.student || []; teacherData = d.teacher || [];
+                noticeData = d.notice || []; attendanceData = d.attendance || []; pollData = d.polls || [];
+                resourcesData = d.resources || []; subjectData = d.subjects || []; marksData = d.marks || {};
                 renderAll();
                 document.getElementById('loader').style.display = 'none';
-            } catch(e) {
-                console.error(e);
-                alert("Connection Failed! Please check internet.");
-            }
+            } catch(e) { alert("Server Connection Failed!"); document.getElementById('loader').style.display = 'none'; }
         }
 
         async function saveData() {
-            let payload = {
-                routine: routineData, student: studentData, teacher: teacherData,
-                notice: noticeData, attendance: attendanceData, polls: pollData,
-                resources: resourcesData, subjects: subjectData, marks: marksData
-            };
-            try {
-                await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
-                    method: "PUT",
-                    headers: { "Content-Type": "application/json", "X-Master-Key": MASTER_KEY },
-                    body: JSON.stringify(payload)
-                });
-                renderAll(); // Refresh UI after save
-            } catch(e) { console.log("Save failed"); }
+            let p = { routine:routineData, student:studentData, teacher:teacherData, notice:noticeData, attendance:attendanceData, polls:pollData, resources:resourcesData, subjects:subjectData, marks:marksData };
+            try { await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, { method: "PUT", headers: { "Content-Type": "application/json", "X-Master-Key": MASTER_KEY }, body: JSON.stringify(p) }); renderAll(); } catch(e) {}
         }
 
-        // --- RENDERERS ---
+        // --- RENDER ---
         function renderAll() {
-            // A. HOME DASHBOARD
-            const feed = document.getElementById('activity-feed'); feed.innerHTML = '';
-            if(noticeData.length > 0) {
-                const n = noticeData[noticeData.length - 1];
-                feed.innerHTML += `<div class="notice-banner"><span class="nb-date">📅 ${n.date}</span><span class="nb-title">${n.title}</span><span class="nb-desc">${n.desc}</span></div>`;
+            // Home
+            const feed = document.getElementById('activity-feed'); feed.innerHTML='';
+            if(noticeData.length) {
+                let n = noticeData[noticeData.length-1];
+                feed.innerHTML += `<div class="notice-banner"><span class="nb-date">Latest</span><span class="nb-title">${n.title}</span><span class="nb-desc">${n.desc}</span></div>`;
             }
-            if(pollData.length > 0) {
-                const p = pollData[pollData.length - 1];
-                feed.innerHTML += `<div class="act-card" onclick="showSection('polls')" style="background:linear-gradient(135deg, #f39c12, #d35400); color:white; padding:15px; border-radius:8px; cursor:pointer; margin-bottom:10px;"><b>🗳️ Active Poll: ${p.question}</b><br><small>Click to vote</small></div>`;
+            if(pollData.length) {
+                let p = pollData[pollData.length-1];
+                feed.innerHTML += `<div class="act-card" style="background:linear-gradient(135deg, #f39c12, #d35400);" onclick="showSection('polls')"><b>🗳️ Poll: ${p.question}</b></div>`;
             }
+            
+            const rBody = document.getElementById('routine-body'); rBody.innerHTML='';
+            routineData.forEach((i,x)=>rBody.innerHTML+=`<tr><td><b>${i.day}</b></td><td>${i.sub}<br><small>${i.room}</small></td><td class="action-col"><button class="delete-btn" onclick="del('routine',${x})">🗑️</button></td></tr>`);
 
-            const rBody = document.getElementById('routine-body'); rBody.innerHTML = '';
-            routineData.forEach((i,x) => rBody.innerHTML += `<tr><td><b>${i.day}</b></td><td>${i.sub}<br><small>${i.room}</small></td><td class="action-col"><button class="delete-btn" onclick="del('routine',${x})">🗑️</button></td></tr>`);
-
-            // B. STUDENTS
-            const stuL = document.getElementById('student-list'); stuL.innerHTML = '';
-            studentData.forEach((s,x) => {
+            // Students
+            const stuL = document.getElementById('student-list'); stuL.innerHTML='';
+            studentData.forEach((s,x)=> {
                 let img = s.img || 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png';
-                let adminBtns = isAdmin ? `<div style="margin-left:auto; display:flex; gap:5px;"><button class="edit-btn" onclick="editStudent(${x})">✏️</button><button class="delete-btn" onclick="del('student',${x})">🗑️</button></div>` : '';
-                stuL.innerHTML += `<div class="card"><div class="student-card-content"><img src="${img}" class="student-img"><div><h3>${s.name}</h3><p>ID: ${s.id} | Dip: ${s.dip||'-'}</p><p class="phone-link" onclick="copyText('${s.phone}')">📞 ${s.phone}</p></div></div>${adminBtns}</div>`;
+                let btns = isAdmin ? `<div style="margin-left:auto;"><button class="edit-btn" onclick="editStudent(${x})">✏️</button><button class="delete-btn" onclick="del('student',${x})">🗑️</button></div>` : '';
+                stuL.innerHTML += `<div class="card"><div class="student-card-content"><img src="${img}" class="student-img"><div><h3>${s.name}</h3><p>ID: ${s.id} | Dip: ${s.dip||'-'}</p><p class="phone-link" onclick="copyText('${s.phone}')">📞 ${s.phone}</p></div></div>${btns}</div>`;
             });
 
-            // C. ACADEMIC & MARKS
+            // Attendance History (With PDF Button)
+            const attH = document.getElementById('attendance-history'); attH.innerHTML='';
+            attendanceData.slice().reverse().forEach((a,i)=> {
+                const ri = attendanceData.length-1-i;
+                const delBtn = isAdmin ? `<button class="delete-btn" onclick="del('attendance',${ri})">Del</button>` : '';
+                attH.innerHTML += `
+                    <div class="history-card">
+                        <div>
+                            <b>${a.subject}</b><br>
+                            <small>📅 ${a.date} | Present: <b style="color:var(--success-color)">${a.presentIDs.length}</b> / ${studentData.length}</small>
+                        </div>
+                        <div style="display:flex; gap:5px;">
+                            <button class="pdf-btn" onclick="generatePDF(${ri})">📄 PDF</button>
+                            ${delBtn}
+                        </div>
+                    </div>`;
+            });
+
+            // Render Input Grid for Attendance
+            renderAttendanceInput();
+
+            // Other Lists (Polls, Notices, Resources, Academic) - Simplified for length
+            renderOthers();
+            updateAdminView();
+        }
+
+        function renderAttendanceInput() {
+            const grid = document.getElementById('attendance-grid');
+            // If empty, generate
+            if(grid.innerHTML === '') {
+                studentData.forEach(s => {
+                    grid.innerHTML += `<div id="att-stu-${s.id}" class="att-student" onclick="toggleAttStatus('${s.id}')">${s.name}<br><small>${s.id}</small></div>`;
+                });
+            }
+        }
+
+        // --- ATTENDANCE LOGIC ---
+        let tempAttendance = new Set(); // Stores IDs of present students
+
+        function toggleAttStatus(id) {
+            const el = document.getElementById('att-stu-'+id);
+            if(tempAttendance.has(id)) {
+                tempAttendance.delete(id);
+                el.classList.remove('present');
+            } else {
+                tempAttendance.add(id);
+                el.classList.add('present');
+            }
+        }
+
+        function selectAllAtt(select) {
+            studentData.forEach(s => {
+                const el = document.getElementById('att-stu-'+s.id);
+                if(select) {
+                    tempAttendance.add(s.id);
+                    el.classList.add('present');
+                } else {
+                    tempAttendance.delete(s.id);
+                    el.classList.remove('present');
+                }
+            });
+        }
+
+        function saveAttendance() {
+            const date = document.getElementById('att-date').value;
+            const subject = document.getElementById('att-subject').value;
+            if(!date || !subject) return alert("Date & Subject required!");
+            
+            attendanceData.push({
+                date: date,
+                subject: subject,
+                presentIDs: Array.from(tempAttendance)
+            });
+            
+            tempAttendance.clear(); // Reset selection
+            document.querySelectorAll('.att-student').forEach(el => el.classList.remove('present'));
+            saveData();
+            alert("Attendance Saved!");
+        }
+
+        // --- PDF GENERATOR (Specific for Attendance Record) ---
+        function generatePDF(index) {
+            const record = attendanceData[index];
+            
+            // Create temporary table for PDF
+            const div = document.createElement('div');
+            div.style.padding = "20px";
+            div.innerHTML = `
+                <div style="text-align:center;">
+                    <h2>UTTARA UNIVERSITY</h2>
+                    <h3>Dept. of EEE | Attendance Sheet</h3>
+                    <p><b>Subject:</b> ${record.subject} | <b>Date:</b> ${record.date}</p>
+                </div>
+                <table style="width:100%; border-collapse:collapse; margin-top:20px;">
+                    <thead>
+                        <tr style="background:#eee;">
+                            <th style="border:1px solid #333; padding:8px;">SL</th>
+                            <th style="border:1px solid #333; padding:8px;">Name</th>
+                            <th style="border:1px solid #333; padding:8px;">ID</th>
+                            <th style="border:1px solid #333; padding:8px;">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${studentData.map((s, i) => {
+                            const isP = record.presentIDs.includes(s.id);
+                            return `<tr>
+                                <td style="border:1px solid #333; padding:5px;">${i+1}</td>
+                                <td style="border:1px solid #333; padding:5px;">${s.name}</td>
+                                <td style="border:1px solid #333; padding:5px;">${s.id}</td>
+                                <td style="border:1px solid #333; padding:5px; font-weight:bold; color:${isP?'green':'red'}">${isP?'Present':'Absent'}</td>
+                            </tr>`;
+                        }).join('')}
+                    </tbody>
+                </table>
+                <div style="margin-top:50px; text-align:right;">
+                    <p>___________________</p>
+                    <p>Teacher's Signature</p>
+                </div>
+            `;
+            
+            html2pdf().from(div).save(`Attendance_${record.subject}_${record.date}.pdf`);
+        }
+
+        // --- OTHER FUNCTIONS ---
+        function handleStudentSubmit() {
+            const n=v('s-name'),i=v('s-id'),d=v('s-dip'),p=v('s-phone'),f=document.getElementById('s-img-file').files[0];
+            if(!n) return alert("Name?");
+            const saveS = (img) => {
+                if(editStudentIndex===-1) studentData.push({name:n,id:i,dip:d,phone:p,img:img});
+                else studentData[editStudentIndex] = {name:n,id:i,dip:d,phone:p,img:img||studentData[editStudentIndex].img};
+                resetStudentForm(); saveData();
+            };
+            if(f){const r=new FileReader(); r.onload=(e)=>saveS(e.target.result); r.readAsDataURL(f);} else saveS('');
+        }
+        function editStudent(i) {
+            const s=studentData[i]; document.getElementById('s-name').value=s.name; document.getElementById('s-id').value=s.id;
+            document.getElementById('s-dip').value=s.dip; document.getElementById('s-phone').value=s.phone;
+            editStudentIndex=i; document.getElementById('btn-student-action').innerText="Update"; window.scrollTo(0,0);
+        }
+        function resetStudentForm(){ document.querySelectorAll('#student-form input').forEach(i=>i.value=''); editStudentIndex=-1; document.getElementById('btn-student-action').innerText="➕ Add Student"; }
+        function copyText(tx){navigator.clipboard.writeText(tx).then(()=>alert("Copied!"));}
+        function toggleMarks(x){const d=document.getElementById(`mv-${x}`); d.style.display=d.style.display=='block'?'none':'block';}
+        function saveMark(sub,id){const k=`${sub}_${id}`; marksData[k]={ct:v(`ct-${k}`),mid:v(`mid-${k}`),fin:v(`fin-${k}`),lab:v(`lab-${k}`)}; saveData();}
+        function vote(pi,oi){ if(localStorage.getItem('v_'+pi)) return alert("Done!"); pollData[pi].options[oi].votes++; localStorage.setItem('v_'+pi,true); saveData(); }
+
+        function renderOthers() {
             const cList = document.getElementById('course-list'); cList.innerHTML = '';
             subjectData.forEach((sub, x) => {
                 let marksRows = '';
@@ -306,106 +450,29 @@
                     const st = isAdmin?'':'disabled'; const bg = isAdmin?'white':'#f9f9f9';
                     marksRows += `<tr><td><small>${student.id}</small></td><td><input type="number" class="marks-input" id="ct-${key}" value="${m.ct}" ${st} style="background:${bg}"></td><td><input type="number" class="marks-input" id="mid-${key}" value="${m.mid}" ${st} style="background:${bg}"></td><td><input type="number" class="marks-input" id="fin-${key}" value="${m.fin}" ${st} style="background:${bg}"></td><td><input type="number" class="marks-input" id="lab-${key}" value="${m.lab}" ${st} style="background:${bg}"></td><td><b>${tot}</b></td><td class="action-col"><button onclick="saveMark('${sub.name}','${student.id}')" style="background:#27ae60;color:white;border:none;border-radius:3px;cursor:pointer;">💾</button></td></tr>`;
                 });
-                cList.innerHTML += `
-                    <div class="subject-card">
-                        <div style="display:flex;justify-content:space-between;"><div><b>${sub.name}</b><br><small>${sub.code}</small></div><a href="${sub.link}" class="link-btn" target="_blank">Syllabus</a></div>
-                        <div style="background:#ecf0f1;height:10px;border-radius:5px;margin:10px 0;"><div class="progress-bar" style="width:${sub.progress}%"></div></div>
-                        <div style="font-size:0.8rem;display:flex;justify-content:space-between;"><span>Status: <b>${sub.status}</b></span><span>${sub.progress}%</span></div>
-                        <div class="admin-form" style="display:${isAdmin?'block':'none'};margin-top:5px;padding:0;background:none;box-shadow:none;"><input type="number" id="pv-${x}" value="${sub.progress}" style="width:40px"><input type="text" id="ps-${x}" value="${sub.status}" style="width:100px"><button onclick="updProg(${x})" style="width:auto;padding:3px;">Update</button><button onclick="del('subjects',${x})" style="background:#e74c3c;color:white;border:none;padding:3px;margin-left:5px;">Del</button></div>
-                        <button style="width:100%;margin-top:10px;padding:8px;background:var(--primary-color);color:white;border:none;border-radius:4px;" onclick="toggleMarks(${x})">📊 View Marks</button>
-                        <div id="mv-${x}" class="marks-container"><div style="display:flex;justify-content:space-between;margin-bottom:5px;"><h4>Marks</h4><button class="print-btn" onclick="pdf('tbl-m-${x}','${sub.name}')">🖨️ PDF</button></div><div style="overflow-x:auto;"><table id="tbl-m-${x}" style="font-size:0.8rem;"><thead><tr><th>ID</th><th>CT</th><th>Mid</th><th>Fin</th><th>Lab</th><th>Tot</th><th class="action-col">Sv</th></tr></thead><tbody>${marksRows}</tbody></table></div></div>
-                    </div>`;
+                cList.innerHTML += `<div class="subject-card"><div style="display:flex;justify-content:space-between;"><div><b>${sub.name}</b><br><small>${sub.code}</small></div><a href="${sub.link}" class="link-btn" target="_blank">Syllabus</a></div><div class="admin-form" style="display:${isAdmin?'block':'none'};margin-top:5px;padding:0;background:none;box-shadow:none;"><button onclick="del('subjects',${x})" style="background:#e74c3c;color:white;border:none;padding:3px;">Del</button></div><button style="width:100%;margin-top:10px;padding:8px;background:var(--primary-color);color:white;border:none;border-radius:4px;" onclick="toggleMarks(${x})">📊 View Marks</button><div id="mv-${x}" class="marks-container"><div style="overflow-x:auto;"><table id="tbl-m-${x}" style="font-size:0.8rem;"><thead><tr><th>ID</th><th>CT</th><th>Mid</th><th>Fin</th><th>Lab</th><th>Tot</th><th class="action-col">Sv</th></tr></thead><tbody>${marksRows}</tbody></table></div></div></div>`;
             });
-
-            // D. POLLS & OTHERS
-            renderOthers();
-            updateAdminView();
-        }
-
-        // --- LOGIC ---
-        function handleStudentSubmit() {
-            const n=v('s-name'), i=v('s-id'), d=v('s-dip'), p=v('s-phone'), file=document.getElementById('s-img-file').files[0];
-            if(!n) return alert("Name needed");
-            
-            const saveS = (img) => {
-                if(editStudentIndex===-1) studentData.push({name:n,id:i,dip:d,phone:p,img:img});
-                else studentData[editStudentIndex] = {name:n,id:i,dip:d,phone:p,img:img || studentData[editStudentIndex].img};
-                resetStudentForm(); saveData();
-            };
-            if(file) {
-                const r = new FileReader(); r.onload = (e) => saveS(e.target.result); r.readAsDataURL(file);
-            } else saveS('');
-        }
-
-        function editStudent(i) {
-            const s = studentData[i];
-            document.getElementById('s-name').value=s.name; document.getElementById('s-id').value=s.id;
-            document.getElementById('s-dip').value=s.dip||''; document.getElementById('s-phone').value=s.phone;
-            editStudentIndex=i; document.getElementById('btn-student-action').innerText="Update"; window.scrollTo(0,0);
-        }
-        function resetStudentForm() {
-            document.querySelectorAll('#student-form input').forEach(i=>i.value='');
-            editStudentIndex=-1; document.getElementById('btn-student-action').innerText="➕ Add Student";
-        }
-
-        function saveMark(sub,id){ const k=`${sub}_${id}`; marksData[k]={ct:v(`ct-${k}`),mid:v(`mid-${k}`),fin:v(`fin-${k}`),lab:v(`lab-${k}`)}; saveData(); }
-        function toggleMarks(x){ const d=document.getElementById(`mv-${x}`); d.style.display=d.style.display=='block'?'none':'block'; }
-        
-        function vote(pi, oi) {
-            if(localStorage.getItem('vote_'+pi)) return alert("Already Voted!");
-            pollData[pi].options[oi].votes++; localStorage.setItem('vote_'+pi, true); saveData();
-        }
-
-        function renderOthers() {
-            const pollL = document.getElementById('poll-list'); pollL.innerHTML=''; 
-            pollData.slice().reverse().forEach((p,i)=>{
-                const ri=pollData.length-1-i; const tot=p.options.reduce((a,b)=>a+b.votes,0);
-                const voted = localStorage.getItem('vote_'+ri);
-                let opts = p.options.map((o,oi)=>`<div class="poll-option" onclick="vote(${ri},${oi})"><div class="poll-bar" style="width:${tot?Math.round(o.votes/tot*100):0}%"></div><div class="poll-text"><span>${o.text}</span><span>${o.votes}</span></div></div>`).join('');
-                pollL.innerHTML+=`<div class="poll-card ${voted?'poll-voted':''}"><b>${p.question}</b> ${voted?'(Voted)':''} ${opts}<button class="delete-btn" onclick="del('polls',${ri})" style="margin-top:5px;">End</button></div>`;
-            });
-
             const resL=document.getElementById('resource-list'); resL.innerHTML=''; resourcesData.forEach((r,x)=>resL.innerHTML+=`<div class="card"><b>${r.title}</b><a href="${r.url}" target="_blank" style="float:right">Open</a><button class="delete-btn" onclick="del('resources',${x})">Del</button></div>`);
             const notL=document.getElementById('notice-list'); notL.innerHTML=''; noticeData.slice().reverse().forEach((n,x)=>notL.innerHTML+=`<div class="card" style="border-left:4px solid #e74c3c"><b>${n.title}</b><br>${n.desc}<button class="delete-btn" onclick="del('notice',${noticeData.length-1-x})" style="float:right">Del</button></div>`);
             const tL=document.getElementById('teacher-list'); tL.innerHTML=''; teacherData.forEach((t,x)=>tL.innerHTML+=`<div class="card"><b>${t.name}</b><br>${t.post}<button class="delete-btn" onclick="del('teacher',${x})" style="float:right">Del</button></div>`);
-            const attL=document.getElementById('attendance-student-list'); attL.innerHTML=''; studentData.forEach(s=>attL.innerHTML+=`<div style="display:flex;justify-content:space-between;padding:5px;"><span>${s.name}</span><input type="checkbox" value="${s.id}" checked class="att-check"></div>`);
-            const attH=document.getElementById('attendance-history'); attH.innerHTML=''; attendanceData.slice().reverse().forEach((a,i)=>attH.innerHTML+=`<div class="card"><b>${a.subject}</b><br>${a.date} (P: ${a.presentIDs.length})<button class="delete-btn" onclick="del('attendance',${attendanceData.length-1-i})" style="float:right">Del</button></div>`);
+            const pollL = document.getElementById('poll-list'); pollL.innerHTML=''; pollData.slice().reverse().forEach((p,i)=>{
+                const ri=pollData.length-1-i; const tot=p.options.reduce((a,b)=>a+b.votes,0); const voted = localStorage.getItem('v_'+ri);
+                let opts = p.options.map((o,oi)=>`<div class="poll-option" onclick="vote(${ri},${oi})"><div class="poll-bar" style="width:${tot?Math.round(o.votes/tot*100):0}%"></div><div class="poll-text"><span>${o.text}</span><span>${o.votes}</span></div></div>`).join('');
+                pollL.innerHTML+=`<div class="poll-card ${voted?'poll-voted':''}"><b>${p.question}</b> ${voted?'(Voted)':''} ${opts}<button class="delete-btn" onclick="del('polls',${ri})" style="margin-top:5px;">End</button></div>`;
+            });
         }
 
-        // --- UTILS ---
-        function v(id){ return document.getElementById(id).value; }
-        function copyText(tx) { navigator.clipboard.writeText(tx).then(()=>alert("Copied!")); }
-        function pdf(id,n){ const e=document.getElementById(id); const w=document.createElement('div'); w.innerHTML='<h3 style="text-align:center">UU EEE</h3>'; w.appendChild(e.cloneNode(true)); html2pdf().from(w).save(n+'.pdf'); }
-        function downloadGeneralPDF(id,n){pdf(id,n);}
-        function toggleAdminMode() { isAdmin=!isAdmin; updateAdminView(); renderAll(); }
-        function updateAdminView() {
-            document.getElementById('admin-toggle').style.background=isAdmin?"#ffc107":"rgba(255,255,255,0.2)";
-            document.querySelectorAll('.admin-form').forEach(e=>e.style.display=isAdmin?'block':'none');
-            document.querySelectorAll('.delete-btn').forEach(e=>e.style.display=isAdmin?'inline-block':'none');
-            document.querySelectorAll('.edit-btn').forEach(e=>e.style.display=isAdmin?'inline-block':'none');
-            document.querySelectorAll('.action-col').forEach(e=>e.style.display=isAdmin?'table-cell':'none');
-        }
+        function v(id){return document.getElementById(id).value;}
+        function toggleAdminMode(){isAdmin=!isAdmin;updateAdminView();renderAll();}
+        function updateAdminView(){document.getElementById('admin-toggle').style.background=isAdmin?"#ffc107":"rgba(255,255,255,0.2)"; document.querySelectorAll('.admin-form').forEach(e=>e.style.display=isAdmin?'block':'none'); document.querySelectorAll('.delete-btn').forEach(e=>e.style.display=isAdmin?'inline-block':'none'); document.querySelectorAll('.edit-btn').forEach(e=>e.style.display=isAdmin?'inline-block':'none'); document.querySelectorAll('.action-col').forEach(e=>e.style.display=isAdmin?'table-cell':'none'); }
+        function addRoutine(){if(v('r-day')){routineData.push({day:v('r-day'),sub:v('r-sub'),room:v('r-room')});saveData();}}
+        function addSubject(){if(v('sub-name')){subjectData.push({name:v('sub-name'),code:v('sub-code'),link:v('sub-link')});saveData();}}
+        function addResource(){if(v('res-title')){resourcesData.push({title:v('res-title'),url:v('res-url')});saveData();}}
+        function addTeacher(){if(v('t-name')){teacherData.push({name:v('t-name'),post:v('t-post'),phone:v('t-phone')});saveData();}}
+        function addNotice(){if(v('n-title')){noticeData.push({date:v('n-date'),title:v('n-title'),desc:v('n-desc')});saveData();}}
+        function addPoll(){if(v('poll-quest')){pollData.push({question:v('poll-quest'),options:document.getElementById('poll-opts').value.split(',').map(t=>({text:t.trim(),votes:0}))});saveData();}}
+        function del(k,i){if(!confirm('Sure?'))return; if(k=='student')studentData.splice(i,1);else if(k=='routine')routineData.splice(i,1);else if(k=='subjects')subjectData.splice(i,1);else if(k=='resources')resourcesData.splice(i,1);else if(k=='teacher')teacherData.splice(i,1);else if(k=='notice')noticeData.splice(i,1);else if(k=='attendance')attendanceData.splice(i,1);else if(k=='polls')pollData.splice(i,1); saveData();}
 
-        // Adders
-        function addRoutine(){ if(v('r-day')) { routineData.push({day:v('r-day'),sub:v('r-sub'),room:v('r-room')}); saveData(); } }
-        function addSubject(){ if(v('sub-name')) { subjectData.push({name:v('sub-name'),code:v('sub-code'),link:v('sub-link'),progress:0,status:'Start'}); saveData(); } }
-        function addResource(){ if(v('res-title')) { resourcesData.push({title:v('res-title'),url:v('res-url')}); saveData(); } }
-        function addTeacher(){ if(v('t-name')) { teacherData.push({name:v('t-name'),post:v('t-post'),phone:v('t-phone')}); saveData(); } }
-        function addNotice(){ if(v('n-title')) { noticeData.push({date:v('n-date'),title:v('n-title'),desc:v('n-desc')}); saveData(); } }
-        function addPoll(){ if(v('poll-quest')) { pollData.push({question:v('poll-quest'),options:document.getElementById('poll-opts').value.split(',').map(t=>({text:t.trim(),votes:0}))}); saveData(); } }
-        function saveAttendance(){ const d=v('att-date'); if(!d)return alert('Date?'); let p=[]; document.querySelectorAll('.att-check:checked').forEach(c=>p.push(c.value)); attendanceData.push({date:d,subject:v('att-subject'),presentIDs:p}); saveData(); }
-        function updProg(x){ subjectData[x].progress=v(`pv-${x}`); subjectData[x].status=v(`ps-${x}`); saveData(); }
-
-        function del(k,i) {
-            if(!confirm('Delete?')) return;
-            if(k=='student') studentData.splice(i,1); else if(k=='routine') routineData.splice(i,1);
-            else if(k=='subjects') subjectData.splice(i,1); else if(k=='resources') resourcesData.splice(i,1);
-            else if(k=='teacher') teacherData.splice(i,1); else if(k=='notice') noticeData.splice(i,1);
-            else if(k=='attendance') attendanceData.splice(i,1); else if(k=='polls') pollData.splice(i,1);
-            saveData();
-        }
-
-        // Start App
         fetchData();
     </script>
 </body>
