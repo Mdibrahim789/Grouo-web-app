@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>UU EEE Dept App</title>
+    <title>UU EEE Dept App (Online Only)</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
     <style>
@@ -32,10 +32,23 @@
         header h1 { margin: 0; font-size: 1.4rem; letter-spacing: 1px; }
         header p { margin: 5px 0 0; font-size: 0.9rem; opacity: 0.9; }
 
-        /* Loader */
-        #loader { display: flex; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.9); z-index: 2000; justify-content: center; align-items: center; flex-direction: column; }
-        .spinner { border: 5px solid #f3f3f3; border-top: 5px solid var(--accent-color); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
+        /* Loader Overlay */
+        #loader { 
+            display: flex; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: rgba(255,255,255,0.95); z-index: 9999; 
+            justify-content: center; align-items: center; flex-direction: column;
+        }
+        .spinner { 
+            border: 5px solid #f3f3f3; border-top: 5px solid var(--accent-color); 
+            border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; 
+        }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        /* Status Bar */
+        #connection-status {
+            background: #27ae60; color: white; text-align: center; font-size: 0.8rem; padding: 2px;
+            display: none; /* Hidden by default, shown on success */
+        }
 
         /* Admin Toggle */
         #admin-toggle {
@@ -82,7 +95,7 @@
         table { width: 100%; border-collapse: collapse; background: white; margin-top: 10px; font-size: 0.9rem; }
         th { background-color: var(--secondary-color); color: var(--accent-color); padding: 10px; text-align: left; }
         td { padding: 10px; border-bottom: 1px solid #ddd; }
-        .card { background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); border-top: 3px solid var(--secondary-color); margin-bottom: 10px; position: relative;}
+        .card { background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); border-top: 3px solid var(--secondary-color); display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; position: relative;}
 
         /* Student Profile UI */
         .student-card-content { display: flex; align-items: center; }
@@ -120,7 +133,13 @@
 </head>
 <body>
 
-    <div id="loader"><div class="spinner"></div><p style="margin-top:10px;">Connecting to Server...</p></div>
+    <div id="loader">
+        <div class="spinner"></div>
+        <p style="margin-top:10px; font-weight:bold; color:#0f2027;">Connecting to Server...</p>
+        <button onclick="location.reload()" style="margin-top:20px; padding:5px 10px; cursor:pointer;">Retry</button>
+    </div>
+
+    <div id="connection-status">🟢 Connected to Server</div>
 
     <header>
         <h1>Uttara University</h1>
@@ -242,16 +261,7 @@
     </nav>
 
     <script>
-        // GLOBAL NAV
-        window.showSection = function(id) {
-            document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active-section'));
-            document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
-            document.getElementById(id).classList.add('active-section');
-            document.getElementById('btn-'+id).classList.add('active');
-            window.scrollTo(0,0);
-        };
-
-        // ⚠️ YOUR API KEYS (Embedded as requested)
+        // --- API CONFIG (DIRECT) ---
         const BIN_ID = "696dd4ea43b1c97be93a1b9a";
         const MASTER_KEY = "$2a$10$KTYAb9AoPKihFgFBHUpPZ.w4pn1jq7NHptoZVp4iPFf3u0k6xmWly";
 
@@ -261,16 +271,22 @@
         let editStudentIndex = -1;
 
         // --- SERVER SYNC ---
+        // 1. Fetch Data (Initial Load)
         async function fetchData() {
-            document.getElementById('loader').style.display = 'flex';
+            const loader = document.getElementById('loader');
+            loader.style.display = 'flex';
+            
             try {
                 let res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, {
                     headers: { "X-Master-Key": MASTER_KEY }
                 });
-                if(!res.ok) throw new Error("Key Error");
+                
+                if(!res.ok) throw new Error("Server Error: " + res.status);
+                
                 let json = await res.json();
                 let d = json.record;
 
+                // Sync Variables
                 routineData = d.routine || [];
                 studentData = d.student || [];
                 teacherData = d.teacher || [];
@@ -282,26 +298,43 @@
                 marksData = d.marks || {};
 
                 renderAll();
+                loader.style.display = 'none';
+                document.getElementById('connection-status').style.display = 'block';
             } catch(e) {
                 console.error(e);
-                alert("Connection Failed! Please check your internet.");
+                // Keep loader visible with Retry button if failed
+                loader.innerHTML = `<div style="text-align:center; color:#e74c3c;"><h3>Connection Failed!</h3><p>Check Internet.</p><button onclick="location.reload()" style="padding:10px; margin-top:10px;">Retry</button></div>`;
             }
-            document.getElementById('loader').style.display = 'none';
         }
 
-        async function pushToServer() {
+        // 2. Save Data (Push to Server)
+        async function saveData() {
+            const loader = document.getElementById('loader');
+            loader.style.display = 'flex'; // Show loader while saving
+            
             let payload = {
                 routine: routineData, student: studentData, teacher: teacherData,
                 notice: noticeData, attendance: attendanceData, polls: pollData,
                 resources: resourcesData, subjects: subjectData, marks: marksData
             };
+
             try {
-                await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
+                let res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
                     method: "PUT",
                     headers: { "Content-Type": "application/json", "X-Master-Key": MASTER_KEY },
                     body: JSON.stringify(payload)
                 });
-            } catch(e) { console.log("Save failed"); }
+                
+                if(res.ok) {
+                    renderAll();
+                    loader.style.display = 'none';
+                } else {
+                    throw new Error("Save Failed");
+                }
+            } catch(e) {
+                alert("Could not save to server! Check internet.");
+                loader.style.display = 'none';
+            }
         }
 
         // --- RENDERERS ---
@@ -344,7 +377,7 @@
             pollData.slice().reverse().forEach((p,i)=>{
                 const ri = pollData.length-1-i; 
                 const tot = p.options.reduce((a,b)=>a+b.votes,0);
-                const hasVoted = localStorage.getItem('voted_poll_'+ri);
+                const hasVoted = localStorage.getItem('voted_poll_'+ri); // Use localstorage just for voting restriction
                 const votedClass = hasVoted ? 'poll-voted' : '';
                 const votedBadge = hasVoted ? '<span class="voted-badge">Voted ✅</span>' : '';
 
@@ -359,6 +392,19 @@
             // D. OTHERS
             renderOthers();
             updateAdminView();
+        }
+
+        function renderOthers() {
+            const cList = document.getElementById('course-list'); cList.innerHTML = '';
+            subjectData.forEach((sub, x) => {
+                cList.innerHTML += `<div class="subject-card"><div style="display:flex;justify-content:space-between;"><div><b>${sub.name}</b><br><small>${sub.code}</small></div><a href="${sub.link}" class="link-btn" target="_blank">Syllabus</a></div><div style="background:#ecf0f1;height:10px;border-radius:5px;margin:10px 0;"><div class="progress-bar" style="width:${sub.progress}%"></div></div><div style="font-size:0.8rem;display:flex;justify-content:space-between;"><span>Status: <b>${sub.status}</b></span><span>${sub.progress}%</span></div><div class="admin-form" style="display:${isAdmin?'block':'none'};margin-top:5px;padding:0;background:none;box-shadow:none;"><input type="number" id="pv-${x}" value="${sub.progress}" style="width:40px"><input type="text" id="ps-${x}" value="${sub.status}" style="width:100px"><button onclick="updProg(${x})" style="width:auto;padding:3px;">Update</button><button onclick="del('subject',${x})" style="background:#e74c3c;color:white;border:none;padding:3px;margin-left:5px;">Del</button></div></div>`;
+            });
+            const resL = document.getElementById('resource-list'); resL.innerHTML=''; resourcesData.forEach((r,x)=> resL.innerHTML+=`<div class="card"><b>${r.title}</b><div><a href="${r.url}" target="_blank" class="link-btn">Open</a><button class="delete-btn" onclick="del('resources',${x})">🗑️</button></div></div>`);
+            const notL = document.getElementById('notice-list'); notL.innerHTML=''; noticeData.slice().reverse().forEach((n,x)=> notL.innerHTML+=`<div class="card" style="display:block;border-left:4px solid #e74c3c;"><b>${n.title}</b> <span style="font-size:0.7rem;background:#eee;padding:2px;">${n.date}</span><p style="margin:5px 0;font-size:0.9rem;">${n.desc}</p><button class="delete-btn" onclick="del('notice',${noticeData.length-1-x})" style="float:right;">Del</button><div style="clear:both;"></div></div>`);
+            
+            const tL = document.getElementById('teacher-list'); tL.innerHTML=''; teacherData.forEach((t,x)=> tL.innerHTML+=`<div class="card"><div><b>${t.name}</b><br><small>${t.post}</small></div><button class="delete-btn" onclick="del('teacher',${x})">🗑️</button></div>`);
+            const attList = document.getElementById('attendance-student-list'); attList.innerHTML=''; studentData.forEach(s=> attList.innerHTML+=`<div style="display:flex;justify-content:space-between;padding:5px;"><span>${s.name}</span><input type="checkbox" value="${s.id}" checked class="att-check"></div>`);
+            const attH = document.getElementById('attendance-history'); attH.innerHTML=''; attendanceData.slice().reverse().forEach((a,i)=>{const ri=attendanceData.length-1-i; attH.innerHTML+=`<div class="card"><b>${a.subject}</b><br>${a.date} (P: ${a.presentIDs.length})<button class="delete-btn" onclick="del('attendance',${ri})" style="float:right">Del</button></div>`;});
         }
 
         // --- FUNCTIONS ---
@@ -380,7 +426,7 @@
         function saveStudentData(name, id, dip, phone, img) {
             if(editStudentIndex === -1) studentData.push({name, id, dip, phone, img});
             else studentData[editStudentIndex] = {name, id, dip, phone, img};
-            resetStudentForm(); pushToServer(); renderAll();
+            resetStudentForm(); saveData();
         }
 
         function editStudent(index) {
@@ -407,24 +453,18 @@
             if(localStorage.getItem('voted_poll_'+pi)) return alert("You have already voted!");
             pollData[pi].options[oi].votes++;
             localStorage.setItem('voted_poll_'+pi, 'true');
-            pushToServer(); renderAll();
-        }
-
-        function renderOthers() {
-            const cList = document.getElementById('course-list'); cList.innerHTML = '';
-            subjectData.forEach((sub, x) => {
-                cList.innerHTML += `<div class="subject-card"><div style="display:flex;justify-content:space-between;"><div><b>${sub.name}</b><br><small>${sub.code}</small></div><a href="${sub.link}" class="link-btn" target="_blank">Syllabus</a></div><div style="background:#ecf0f1;height:10px;border-radius:5px;margin:10px 0;"><div class="progress-bar" style="width:${sub.progress}%"></div></div><div style="font-size:0.8rem;display:flex;justify-content:space-between;"><span>Status: <b>${sub.status}</b></span><span>${sub.progress}%</span></div><div class="admin-form" style="display:${isAdmin?'block':'none'};margin-top:5px;padding:0;background:none;box-shadow:none;"><input type="number" id="pv-${x}" value="${sub.progress}" style="width:40px"><input type="text" id="ps-${x}" value="${sub.status}" style="width:100px"><button onclick="updProg(${x})" style="width:auto;padding:3px;">Update</button><button onclick="del('subject',${x})" style="background:#e74c3c;color:white;border:none;padding:3px;margin-left:5px;">Del</button></div></div>`;
-            });
-            const resL = document.getElementById('resource-list'); resL.innerHTML=''; resourcesData.forEach((r,x)=> resL.innerHTML+=`<div class="card"><b>${r.title}</b><div><a href="${r.url}" target="_blank" class="link-btn">Open</a><button class="delete-btn" onclick="del('resources',${x})">🗑️</button></div></div>`);
-            const notL = document.getElementById('notice-list'); notL.innerHTML=''; noticeData.slice().reverse().forEach((n,x)=> notL.innerHTML+=`<div class="card" style="display:block;border-left:4px solid #e74c3c;"><b>${n.title}</b> <span style="font-size:0.7rem;background:#eee;padding:2px;">${n.date}</span><p style="margin:5px 0;font-size:0.9rem;">${n.desc}</p><button class="delete-btn" onclick="del('notice',${noticeData.length-1-x})" style="float:right;">Del</button><div style="clear:both;"></div></div>`);
-            
-            const tL = document.getElementById('teacher-list'); tL.innerHTML=''; teacherData.forEach((t,x)=> tL.innerHTML+=`<div class="card"><div><b>${t.name}</b><br><small>${t.post}</small></div><button class="delete-btn" onclick="del('teacher',${x})">🗑️</button></div>`);
-            const attList = document.getElementById('attendance-student-list'); attList.innerHTML=''; studentData.forEach(s=> attList.innerHTML+=`<div style="display:flex;justify-content:space-between;padding:5px;"><span>${s.name}</span><input type="checkbox" value="${s.id}" checked class="att-check"></div>`);
-            const attH = document.getElementById('attendance-history'); attH.innerHTML=''; attendanceData.slice().reverse().forEach((a,i)=>{const ri=attendanceData.length-1-i; attH.innerHTML+=`<div class="card"><b>${a.subject}</b><br>${a.date} (P: ${a.presentIDs.length})<button class="delete-btn" onclick="del('attendance',${ri})" style="float:right">Del</button></div>`;});
+            saveData();
         }
 
         // --- UTILS ---
         function v(id){ return document.getElementById(id).value; }
+        function showSection(id) {
+            document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active-section'));
+            document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+            document.getElementById(id).classList.add('active-section');
+            document.getElementById('btn-'+id).classList.add('active');
+            window.scrollTo(0,0);
+        }
         function toggleAdminMode() { isAdmin=!isAdmin; updateAdminView(); renderAll(); }
         function updateAdminView() {
             document.getElementById('admin-toggle').style.background=isAdmin?"#ffc107":"rgba(255,255,255,0.2)";
@@ -433,17 +473,16 @@
             document.querySelectorAll('.edit-btn').forEach(e=>e.style.display=isAdmin?'inline-block':'none');
             document.querySelectorAll('.action-col').forEach(e=>e.style.display=isAdmin?'table-cell':'none');
         }
-        function pdf(id,n){ const e=document.getElementById(id); const w=document.createElement('div'); w.innerHTML='<h3 style="text-align:center">UU EEE</h3>'; w.appendChild(e.cloneNode(true)); html2pdf().from(w).save(n+'.pdf'); }
-        function downloadGeneralPDF(id, n) { pdf(id,n); }
+        function downloadGeneralPDF(id, n) { const e=document.getElementById(id); const w=document.createElement('div'); w.innerHTML='<h3 style="text-align:center">UU EEE</h3>'; w.appendChild(e.cloneNode(true)); html2pdf().from(w).save(n+'.pdf'); }
 
-        function addRoutine(){ if(v('r-day')) { routineData.push({day:v('r-day'),sub:v('r-sub'),room:v('r-room')}); pushToServer(); renderAll(); } }
-        function addSubject(){ if(v('sub-name')) { subjectData.push({name:v('sub-name'),code:v('sub-code'),link:v('sub-link'),progress:0,status:'Start'}); pushToServer(); renderAll(); } }
-        function addResource(){ if(v('res-title')) { resourcesData.push({title:v('res-title'),url:v('res-url')}); pushToServer(); renderAll(); } }
-        function addTeacher(){ if(v('t-name')) { teacherData.push({name:v('t-name'),post:v('t-post'),phone:v('t-phone')}); pushToServer(); renderAll(); } }
-        function addNotice(){ if(v('n-title')) { noticeData.push({date:v('n-date'),title:v('n-title'),desc:v('n-desc')}); pushToServer(); renderAll(); } }
-        function addPoll(){ if(v('poll-quest')) { pollData.push({question:v('poll-quest'),options:document.getElementById('poll-opts').value.split(',').map(t=>({text:t.trim(),votes:0}))}); pushToServer(); renderAll(); } }
-        function saveAttendance(){ const d=v('att-date'); if(!d)return alert('Date?'); let p=[]; document.querySelectorAll('.att-check:checked').forEach(c=>p.push(c.value)); attendanceData.push({date:d,subject:v('att-subject'),presentIDs:p}); pushToServer(); renderAll(); }
-        function updProg(x){ subjectData[x].progress=v(`pv-${x}`); subjectData[x].status=v(`ps-${x}`); pushToServer(); renderAll(); }
+        function addRoutine(){ if(v('r-day')) { routineData.push({day:v('r-day'),sub:v('r-sub'),room:v('r-room')}); saveData(); } }
+        function addSubject(){ if(v('sub-name')) { subjectData.push({name:v('sub-name'),code:v('sub-code'),link:v('sub-link'),progress:0,status:'Start'}); saveData(); } }
+        function addResource(){ if(v('res-title')) { resourcesData.push({title:v('res-title'),url:v('res-url')}); saveData(); } }
+        function addTeacher(){ if(v('t-name')) { teacherData.push({name:v('t-name'),post:v('t-post'),phone:v('t-phone')}); saveData(); } }
+        function addNotice(){ if(v('n-title')) { noticeData.push({date:v('n-date'),title:v('n-title'),desc:v('n-desc')}); saveData(); } }
+        function addPoll(){ if(v('poll-quest')) { pollData.push({question:v('poll-quest'),options:document.getElementById('poll-opts').value.split(',').map(t=>({text:t.trim(),votes:0}))}); saveData(); } }
+        function saveAttendance(){ const d=v('att-date'); if(!d)return alert('Date?'); let p=[]; document.querySelectorAll('.att-check:checked').forEach(c=>p.push(c.value)); attendanceData.push({date:d,subject:v('att-subject'),presentIDs:p}); saveData(); }
+        function updProg(x){ subjectData[x].progress=v(`pv-${x}`); subjectData[x].status=v(`ps-${x}`); saveData(); }
 
         function del(k,i) {
             if(!confirm('Sure?')) return;
@@ -451,7 +490,7 @@
             else if(k=='subjects') subjectData.splice(i,1); else if(k=='resources') resourcesData.splice(i,1);
             else if(k=='teacher') teacherData.splice(i,1); else if(k=='notice') noticeData.splice(i,1);
             else if(k=='attendance') attendanceData.splice(i,1); else if(k=='polls') pollData.splice(i,1);
-            pushToServer(); renderAll();
+            saveData();
         }
 
         // START
