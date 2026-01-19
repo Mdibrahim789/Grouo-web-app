@@ -3,337 +3,556 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>UU EEE Dept App</title>
+    <title>UU EEE Dashboard</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 
     <style>
+        /* --- THEME VARS --- */
         :root {
-            --bg-body: #f8f9fa; --bg-card: #ffffff; --text-main: #2d3436; --text-muted: #636e72;
-            --primary: #6c5ce7; --primary-dark: #5844d6; --accent: #00cec9;
-            --sidebar-bg: #2d3436; --sidebar-text: #dfe6e9; --border: #e2e8f0;
-            --shadow: 0 4px 6px -1px rgba(0,0,0,0.1); --input-bg: #ffffff;
+            --sidebar-bg: #0f172a;      /* Dark Blue/Black */
+            --sidebar-hover: #1e293b;
+            --active-bg: #f59e0b;       /* Amber/Orange */
+            --active-text: #000000;
+            --text-muted: #94a3b8;
+            --text-light: #ffffff;
+            --bg-body: #f1f5f9;         /* Light Grey Background */
+            --card-bg: #ffffff;
+            --success: #22c55e;
+            --danger: #ef4444;
         }
-        body.dark-mode {
-            --bg-body: #0f172a; --bg-card: #1e293b; --text-main: #f1f5f9; --text-muted: #94a3b8;
-            --primary: #818cf8; --primary-dark: #6366f1; --accent: #38bdf8;
-            --sidebar-bg: #020617; --sidebar-text: #cbd5e1; --border: #334155; --input-bg: #334155;
-        }
-        * { box-sizing: border-box; transition: background 0.3s, color 0.3s; }
-        body { font-family: 'Segoe UI', sans-serif; margin: 0; background: var(--bg-body); color: var(--text-main); display: flex; height: 100vh; overflow: hidden; }
 
-        /* SIDEBAR */
-        #sidebar { width: 260px; background: var(--sidebar-bg); color: var(--sidebar-text); padding: 20px; height: 100vh; position: fixed; left: 0; top: 0; z-index: 1000; transition: 0.3s; display: flex; flex-direction: column; }
-        .brand { font-size: 1.5rem; font-weight: 800; color: white; margin-bottom: 30px; display: flex; align-items: center; gap: 10px; }
-        .menu-items { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 5px; }
-        .menu-btn { background: transparent; border: none; color: var(--sidebar-text); padding: 12px 15px; text-align: left; font-size: 0.95rem; cursor: pointer; border-radius: 10px; display: flex; align-items: center; gap: 12px; font-weight: 500; }
-        .menu-btn:hover { background: rgba(255,255,255,0.1); }
-        .menu-btn.active { background: linear-gradient(90deg, var(--primary), var(--primary-dark)); color: white; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+        * { box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; margin: 0; padding: 0; background: var(--bg-body); color: #333; height: 100vh; overflow: hidden; display: flex; }
+
+        /* --- SIDEBAR --- */
+        .sidebar {
+            width: 260px;
+            background: var(--sidebar-bg);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            transition: transform 0.3s ease;
+            z-index: 1000;
+            flex-shrink: 0;
+        }
+
+        /* Logo Area */
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.5rem;
+            font-weight: 800;
+            margin-bottom: 30px;
+            color: var(--text-light);
+        }
+        .brand i { color: var(--active-bg); }
+
+        /* Navigation Links */
+        .nav-links { flex: 1; list-style: none; padding: 0; margin: 0; overflow-y: auto; }
+        .nav-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 15px;
+            margin-bottom: 8px;
+            border-radius: 8px;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: 0.2s;
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+        .nav-item i { width: 25px; font-size: 1.1rem; }
+        .nav-item:hover { background: var(--sidebar-hover); color: var(--text-light); }
         
-        /* MAIN CONTENT */
-        #main-content { flex: 1; margin-left: 260px; height: 100vh; overflow-y: auto; position: relative; }
-        .mobile-header { display: none; background: var(--bg-card); padding: 15px; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 900; box-shadow: var(--shadow); }
-        .content-section { display: none; padding: 25px; max-width: 1000px; margin: 0 auto; animation: fadeUp 0.4s; }
+        /* Active State (Orange) */
+        .nav-item.active {
+            background: var(--active-bg);
+            color: var(--active-text);
+            box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+        }
+
+        /* Sidebar Footer (Admin & Sync) */
+        .sidebar-footer { margin-top: auto; padding-top: 20px; border-top: 1px solid #334155; }
+        
+        .admin-box {
+            background: rgba(255,255,255,0.05);
+            border-radius: 8px;
+            padding: 12px;
+            text-align: center;
+            cursor: pointer;
+            border: 1px solid transparent;
+            transition: 0.3s;
+        }
+        .admin-box.active-mode {
+            background: rgba(245, 158, 11, 0.1);
+            border-color: var(--active-bg);
+            color: var(--active-bg);
+        }
+        
+        .sync-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 15px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--danger); }
+        .status-dot.online { background: var(--success); }
+
+        /* --- MAIN CONTENT --- */
+        .main-content {
+            flex: 1;
+            height: 100vh;
+            overflow-y: auto;
+            position: relative;
+            background: var(--bg-body);
+        }
+
+        /* Header for Mobile */
+        .mobile-header {
+            display: none;
+            background: var(--sidebar-bg);
+            color: white;
+            padding: 15px;
+            align-items: center;
+            /* Changed to align items to left */
+            justify-content: flex-start; 
+            gap: 20px;
+            position: sticky;
+            top: 0;
+            z-index: 99;
+        }
+
+        .content-area {
+            padding: 30px;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        /* Section Styling */
+        .section-title { font-size: 1.5rem; color: #1e293b; margin-bottom: 20px; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; }
+        .content-section { display: none; animation: fadeUp 0.3s ease; }
         .content-section.active-section { display: block; }
-        @keyframes fadeUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* COMPONENTS */
-        .card { background: var(--bg-card); padding: 20px; border-radius: 12px; box-shadow: var(--shadow); border: 1px solid var(--border); margin-bottom: 15px; }
-        .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        h2 { margin: 0; font-size: 1.4rem; position: relative; }
-        h2::after { content:''; display:block; width:40px; height:3px; background:var(--accent); margin-top:5px; border-radius:2px; }
+        /* Cards */
+        .card { background: var(--card-bg); padding: 20px; border-radius: 12px; margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; }
         
-        .admin-form { display: none; background: var(--bg-card); padding: 20px; border-radius: 12px; border-left: 4px solid var(--accent); margin-bottom: 20px; box-shadow: var(--shadow); }
-        input, select, textarea { width: 100%; padding: 10px; margin: 5px 0; background: var(--input-bg); color: var(--text-main); border: 1px solid var(--border); border-radius: 6px; }
-        .btn { padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; }
-        .btn-primary { background: var(--primary); color: white; width: 100%; margin-top: 10px; }
-        .btn-sm { font-size: 0.8rem; padding: 5px 10px; }
-        .btn-red { background: #ef4444; color: white; }
+        /* Admin Forms */
+        .admin-form { display: none; background: #fff; padding: 20px; border-radius: 12px; margin-bottom: 20px; border: 1px solid #cbd5e1; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+        .admin-form input, .admin-form select, .admin-form textarea { width: 100%; padding: 10px; margin: 8px 0; border: 1px solid #cbd5e1; border-radius: 6px; }
+        .admin-form button { background: var(--active-bg); color: black; font-weight: bold; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; }
 
-        /* SPECIFIC UI */
-        .notice-banner { background: linear-gradient(135deg, var(--primary), var(--accent)); color: white; padding: 25px; border-radius: 12px; margin-bottom: 25px; position: relative; overflow: hidden; }
-        .notice-banner::before { content: '🔔'; position: absolute; right: -10px; top: -10px; font-size: 6rem; opacity: 0.2; transform: rotate(15deg); }
+        /* Tables & Lists */
+        table { width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; }
+        th { background: #f8fafc; text-align: left; padding: 12px; font-size: 0.85rem; color: #64748b; text-transform: uppercase; }
+        td { padding: 12px; border-bottom: 1px solid #f1f5f9; }
         
-        .routine-table { width: 100%; border-collapse: collapse; }
-        .routine-table th, .routine-table td { padding: 12px; text-align: left; border-bottom: 1px solid var(--border); }
-        
-        /* Gallery Grid */
-        .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 15px; margin-top: 15px; }
-        .gallery-item { position: relative; border-radius: 10px; overflow: hidden; height: 150px; border: 1px solid var(--border); }
-        .gallery-item img { width: 100%; height: 100%; object-fit: cover; transition: 0.3s; }
-        .gallery-item:hover img { transform: scale(1.1); }
-        .gallery-caption { position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.6); color: white; font-size: 0.8rem; padding: 5px; text-align: center; }
-        .gallery-del { position: absolute; top: 5px; right: 5px; background: red; color: white; width: 25px; height: 25px; border-radius: 50%; border:none; cursor: pointer; display: none; align-items:center; justify-content:center; }
-        
-        /* Dashboard Gallery Scroll */
-        .dash-gallery { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 10px; }
-        .dash-gallery img { width: 120px; height: 80px; border-radius: 8px; object-fit: cover; border: 1px solid var(--border); }
+        /* Grid for Attendance */
+        .att-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; }
+        .att-student { background: white; border: 1px solid #e2e8f0; padding: 15px; border-radius: 8px; text-align: center; cursor: pointer; transition: 0.2s; }
+        .att-student.present { background: #dcfce7; border-color: #22c55e; color: #166534; font-weight: bold; }
 
-        /* Responsive */
+        /* --- RESPONSIVE --- */
         @media (max-width: 768px) {
-            #sidebar { transform: translateX(-100%); } #sidebar.open { transform: translateX(0); }
-            #main-content { margin-left: 0; } .mobile-header { display: flex; } .content-section { padding: 15px; }
+            body { flex-direction: column; }
+            .sidebar { 
+                position: fixed; top: 0; left: 0; height: 100%; transform: translateX(-100%); 
+                width: 280px; box-shadow: 5px 0 15px rgba(0,0,0,0.3);
+            }
+            .sidebar.open { transform: translateX(0); }
+            .mobile-header { display: flex; }
+            .content-area { padding: 15px; padding-bottom: 80px; }
+            .overlay { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:999;}
+            .overlay.active { display: block; }
         }
-        #loader { position: fixed; inset: 0; background: var(--bg-body); z-index: 2000; display: flex; justify-content: center; align-items: center; flex-direction: column; }
-        .loader-ring { width: 40px; height: 40px; border: 4px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: spin 1s infinite linear; }
-        @keyframes spin { to { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
 
-    <div id="loader"><div class="loader-ring"></div><p style="margin-top:15px; font-weight:bold;">Loading Cloud Data...</p></div>
-    <div id="overlay" onclick="toggleSidebar()" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:999;"></div>
+    <div class="overlay" onclick="toggleSidebar()"></div>
 
-    <div id="sidebar">
-        <div class="brand"><i class="fa-solid fa-graduation-cap"></i> UU EEE</div>
-        <div class="menu-items">
-            <button onclick="nav('home')" id="btn-home" class="menu-btn active"><i class="fa-solid fa-house"></i> Dashboard</button>
-            <button onclick="nav('gallery')" id="btn-gallery" class="menu-btn"><i class="fa-solid fa-images"></i> Gallery</button> <button onclick="nav('academic')" id="btn-academic" class="menu-btn"><i class="fa-solid fa-book"></i> Academic</button>
-            <button onclick="nav('students')" id="btn-students" class="menu-btn"><i class="fa-solid fa-users"></i> Students</button>
-            <button onclick="nav('teachers')" id="btn-teachers" class="menu-btn"><i class="fa-solid fa-chalkboard-user"></i> Faculty</button>
-            <button onclick="nav('notice')" id="btn-notice" class="menu-btn"><i class="fa-solid fa-bell"></i> Notices</button>
-            <button onclick="nav('attendance')" id="btn-attendance" class="menu-btn"><i class="fa-solid fa-clipboard-user"></i> Attendance</button>
-            <button onclick="nav('polls')" id="btn-polls" class="menu-btn"><i class="fa-solid fa-square-poll-vertical"></i> Polls</button>
+    <nav class="sidebar" id="sidebar">
+        <div class="brand">
+            <i class="fa-solid fa-bolt"></i> UU EEE
         </div>
-        <div style="margin-top:auto; display:flex; flex-direction:column; gap:10px;">
-            <button onclick="toggleTheme()" class="menu-btn" style="justify-content:center; background:rgba(255,255,255,0.05);"><i class="fa-solid fa-moon"></i> Theme</button>
-            <button onclick="toggleAdmin()" id="admin-btn" class="menu-btn" style="justify-content:center; background:rgba(255,255,255,0.05);"><i class="fa-solid fa-lock"></i> Admin</button>
-        </div>
-    </div>
 
-    <div id="main-content">
+        <ul class="nav-links">
+            <li class="nav-item active" onclick="showSection('home')" id="btn-home">
+                <i class="fa-solid fa-house"></i> Dashboard
+            </li>
+            <li class="nav-item" onclick="showSection('academic')" id="btn-academic">
+                <i class="fa-solid fa-book-open"></i> Academic
+            </li>
+            <li class="nav-item" onclick="showSection('students')" id="btn-students">
+                <i class="fa-solid fa-users"></i> Students
+            </li>
+            <li class="nav-item" onclick="showSection('teachers')" id="btn-teachers">
+                <i class="fa-solid fa-chalkboard-user"></i> Faculty
+            </li>
+            <li class="nav-item" onclick="showSection('notice')" id="btn-notice">
+                <i class="fa-solid fa-bullhorn"></i> Notices
+            </li>
+            <li class="nav-item" onclick="showSection('attendance')" id="btn-attendance">
+                <i class="fa-solid fa-clipboard-check"></i> Attendance
+            </li>
+            <li class="nav-item" onclick="showSection('polls')" id="btn-polls">
+                <i class="fa-solid fa-square-poll-vertical"></i> Polls
+            </li>
+        </ul>
+
+        <div class="sidebar-footer">
+            <div class="admin-box" id="admin-btn" onclick="toggleAdminMode()">
+                <i class="fa-solid fa-lock"></i> <span>Enable Admin</span>
+            </div>
+            <div class="sync-status">
+                <div class="status-dot" id="sync-dot"></div>
+                <span id="sync-text">Connecting...</span>
+            </div>
+        </div>
+    </nav>
+
+    <div class="main-content">
         <div class="mobile-header">
-            <div onclick="toggleSidebar()"><i class="fa-solid fa-bars" style="font-size:1.4rem;"></i></div>
-            <span style="font-weight:700;">Dept. of EEE</span>
-            <div style="width:20px;"></div>
-        </div>
-
-        <div id="home" class="content-section active-section">
+            <i class="fa-solid fa-bars" style="font-size:1.5rem; cursor:pointer;" onclick="toggleSidebar()"></i>
             
-            <div id="dashboard-notice"></div>
-
-            <div class="section-header" style="margin-top:20px;">
-                <h2>📅 Class Routine</h2>
-                <button class="btn btn-sm btn-primary" style="width:auto;" onclick="pdf('routine-table')">PDF</button>
+            <div style="font-weight:bold; display:flex; gap:10px; align-items:center;">
+                <i class="fa-solid fa-bolt" style="color:#f59e0b;"></i> UU EEE
             </div>
-            <div class="admin-form">
-                <input id="r-day" placeholder="Day"><input id="r-sub" placeholder="Subject"><input id="r-room" placeholder="Room">
-                <button class="btn btn-primary" onclick="addRoutine()">Add Class</button>
+        </div>
+
+        <div class="content-area">
+            
+            <div id="home" class="content-section active-section">
+                <h2 class="section-title">👋 Welcome Batch 2026</h2>
+                <div id="activity-feed"></div>
+
+                <h3 style="margin-top:30px;">📅 Class Routine</h3>
+                <div class="admin-form">
+                    <input type="text" id="r-day" placeholder="Day (e.g. Sunday)">
+                    <input type="text" id="r-sub" placeholder="Subject">
+                    <input type="text" id="r-room" placeholder="Room">
+                    <button onclick="addRoutine()">➕ Add Class</button>
+                </div>
+                <table id="routine-table"><thead><tr><th>Day</th><th>Subject</th><th>Room</th><th class="action-col">Act</th></tr></thead><tbody id="routine-body"></tbody></table>
             </div>
-            <div class="card" style="padding:0; overflow:hidden;">
-                <table class="routine-table" id="routine-table">
-                    <thead style="background:var(--bg-body);"><tr><th>Time</th><th>Subject</th><th>Act</th></tr></thead>
-                    <tbody id="routine-body"></tbody>
-                </table>
+
+            <div id="academic" class="content-section">
+                <h2 class="section-title">📘 Academic Resources</h2>
+                <div class="admin-form">
+                    <h3>Add Course</h3>
+                    <input type="text" id="sub-name" placeholder="Name">
+                    <input type="text" id="sub-code" placeholder="Code">
+                    <input type="text" id="sub-link" placeholder="Syllabus Link">
+                    <button onclick="addSubject()">Add Course</button>
+                </div>
+                <div id="course-list"></div>
+                <h3 style="margin-top:30px">📚 Files & Links</h3>
+                <div class="admin-form">
+                    <input type="text" id="res-title" placeholder="Title">
+                    <input type="text" id="res-url" placeholder="URL">
+                    <button onclick="addResource()">Add Resource</button>
+                </div>
+                <div id="resource-list"></div>
             </div>
 
-            <div class="section-header" style="margin-top:30px;"><h2>⚡ Recent Activity</h2></div>
-            <div id="activity-feed"></div>
-
-            <div class="section-header" style="margin-top:30px;"><h2>📸 Photo Gallery</h2></div>
-            <div id="dash-gallery" class="dash-gallery"></div>
-        </div>
-
-        <div id="gallery" class="content-section">
-            <div class="admin-form">
-                <h3>Upload Photo</h3>
-                <input type="file" id="g-upload" accept="image/*">
-                <input type="text" id="g-caption" placeholder="Caption (Optional)">
-                <button class="btn btn-primary" onclick="addPhoto()">Upload to Gallery</button>
+            <div id="students" class="content-section">
+                <h2 class="section-title">👥 Student Profiles</h2>
+                <div class="admin-form" id="student-form">
+                    <input type="file" id="s-img-file" accept="image/*">
+                    <input type="text" id="s-name" placeholder="Name">
+                    <input type="text" id="s-id" placeholder="ID">
+                    <input type="text" id="s-phone" placeholder="Phone">
+                    <button id="btn-student-action" onclick="handleStudentSubmit()">Add Student</button>
+                    <button onclick="resetStudentForm()" style="background:#64748b; color:white; margin-top:5px;">Cancel</button>
+                </div>
+                <div id="student-list"></div>
             </div>
-            <h2>Department Gallery</h2>
-            <div id="gallery-grid" class="gallery-grid"></div>
-        </div>
 
-        <div id="students" class="content-section">
-            <div class="admin-form" id="student-form">
-                <h3>Student Info</h3>
-                <input type="file" id="s-img" accept="image/*">
-                <input id="s-name" placeholder="Name"><input id="s-id" placeholder="ID"><input id="s-dip" placeholder="Dip. Session"><input id="s-phone" placeholder="Phone">
-                <button class="btn btn-primary" id="stu-btn" onclick="addStudent()">Add</button>
-                <button class="btn btn-primary" onclick="resetForm()" style="background:#64748b;">Cancel</button>
+            <div id="teachers" class="content-section">
+                <h2 class="section-title">👨‍🏫 Faculty Members</h2>
+                <div class="admin-form">
+                    <input type="text" id="t-name" placeholder="Name">
+                    <input type="text" id="t-post" placeholder="Designation">
+                    <input type="text" id="t-phone" placeholder="Phone">
+                    <button onclick="addTeacher()">Add Faculty</button>
+                </div>
+                <div id="teacher-list"></div>
             </div>
-            <div class="section-header"><h2>Student List</h2></div>
-            <div id="student-list"></div>
-        </div>
 
-        <div id="academic" class="content-section">
-            <div class="admin-form"><input id="sub-name" placeholder="Course"><input id="sub-code" placeholder="Code"><input id="sub-link" placeholder="Link"><button class="btn btn-primary" onclick="addSubject()">Add</button></div>
-            <h2>Active Courses</h2><div id="course-list"></div>
-        </div>
+            <div id="notice" class="content-section">
+                <h2 class="section-title">🔔 Notice Board</h2>
+                <div class="admin-form">
+                    <input type="date" id="n-date">
+                    <input type="text" id="n-title" placeholder="Title">
+                    <textarea id="n-desc" placeholder="Details"></textarea>
+                    <button onclick="addNotice()">Post Notice</button>
+                </div>
+                <div id="notice-list"></div>
+            </div>
 
-        <div id="teachers" class="content-section">
-            <div class="admin-form"><input id="t-name" placeholder="Name"><input id="t-post" placeholder="Post"><input id="t-phone" placeholder="Phone"><button class="btn btn-primary" onclick="addTeacher()">Add</button></div>
-            <h2>Faculty</h2><div id="teacher-list"></div>
-        </div>
+            <div id="attendance" class="content-section">
+                <h2 class="section-title">📝 Take Attendance</h2>
+                <div class="admin-form" style="display:block !important;"> <div id="att-controls" style="display:none;"> <input type="date" id="att-date">
+                        <input type="text" id="att-subject" placeholder="Subject Name">
+                        <div style="display:flex; gap:10px; margin:10px 0;">
+                            <button onclick="selectAllAtt(true)" style="background:#334155; color:white; font-size:0.8rem;">All Present</button>
+                            <button onclick="selectAllAtt(false)" style="background:#334155; color:white; font-size:0.8rem;">Clear</button>
+                        </div>
+                        <div id="attendance-grid" class="att-grid"></div>
+                        <button onclick="saveAttendance()" style="margin-top:15px; width:100%;">💾 Save Record</button>
+                        <hr>
+                    </div>
+                    <h3>📜 History</h3>
+                    <div id="attendance-history"></div>
+                </div>
+            </div>
 
-        <div id="notice" class="content-section">
-            <div class="admin-form"><input type="date" id="n-date"><input id="n-title" placeholder="Title"><input id="n-desc" placeholder="Details"><button class="btn btn-primary" onclick="addNotice()">Post</button></div>
-            <h2>Notices</h2><div id="notice-list"></div>
-        </div>
+             <div id="polls" class="content-section">
+                <h2 class="section-title">🗳️ Voting & Polls</h2>
+                <div class="admin-form">
+                    <input type="text" id="poll-quest" placeholder="Question">
+                    <textarea id="poll-opts" placeholder="Options (comma separated)"></textarea>
+                    <button onclick="addPoll()">Create Poll</button>
+                </div>
+                <div id="poll-list"></div>
+            </div>
 
-        <div id="attendance" class="content-section">
-            <div class="admin-form"><input type="date" id="att-date"><input id="att-sub" placeholder="Subject"><div id="att-grid" class="gallery-grid" style="grid-template-columns:repeat(auto-fill,minmax(80px,1fr));"></div><button class="btn btn-primary" onclick="saveAttendance()">Save</button></div>
-            <h2>History</h2><div id="att-history"></div>
-        </div>
-        <div id="polls" class="content-section">
-            <div class="admin-form"><input id="p-q" placeholder="Q"><input id="p-o" placeholder="Options"><button class="btn btn-primary" onclick="addPoll()">Create</button></div>
-            <h2>Polls</h2><div id="poll-list"></div>
         </div>
     </div>
 
     <script>
-        const BIN_ID = "696ddab4ae596e708fe5fa10"; 
-        const MASTER_KEY = "$2a$10$KTYAb9AoPKihFgFBHUpPZ.w4pn1jq7NHptoZVp4iPFf3u0k6xmWly";
+        // CONFIG - UPDATED
+        const BIN_ID = "696df6b5ae596e708fe62a8b"; 
+        const MASTER_KEY = "$2a$10$e0AwKK3h1YV3/kmqFxYITOPhqzvyD6OoCaTUZ6PzcRBfWJwpQInOW";
 
-        let data = { routine:[], student:[], teacher:[], notice:[], attendance:[], polls:[], courses:[], gallery:[] };
+        // STATE
+        let data = { routine:[], student:[], teacher:[], notice:[], attendance:[], polls:[], resources:[], subjects:[], marks:{} };
         let isAdmin = false;
-        let editIdx = -1;
+        let tempAttendance = new Set();
+        let editStudentIndex = -1;
 
-        function toggleTheme() { document.body.classList.toggle('dark-mode'); localStorage.setItem('theme', document.body.classList.contains('dark-mode')?'dark':'light'); }
-        if(localStorage.getItem('theme')==='dark') document.body.classList.add('dark-mode');
-
-        function nav(id) {
+        // UI HELPERS
+        function showSection(id) {
             document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active-section'));
             document.getElementById(id).classList.add('active-section');
-            document.querySelectorAll('.menu-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
             document.getElementById('btn-'+id).classList.add('active');
-            toggleSidebar(false);
-        }
-        function toggleSidebar(forceClose) {
-            const sb=document.getElementById('sidebar'), ov=document.getElementById('overlay');
-            if(forceClose===false){ sb.classList.remove('open'); ov.style.display='none'; }
-            else{ sb.classList.toggle('open'); ov.style.display=sb.classList.contains('open')?'block':'none'; }
+            
+            // Mobile Sidebar Close
+            if(window.innerWidth < 768) toggleSidebar();
         }
 
-        async function init() {
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('open');
+            document.querySelector('.overlay').classList.toggle('active');
+        }
+
+        function toggleAdminMode() {
+            isAdmin = !isAdmin;
+            const btn = document.getElementById('admin-btn');
+            const span = btn.querySelector('span');
+            
+            if(isAdmin) {
+                btn.classList.add('active-mode');
+                span.innerText = "ADMIN ACTIVE";
+                document.getElementById('att-controls').style.display = 'block';
+            } else {
+                btn.classList.remove('active-mode');
+                span.innerText = "Enable Admin";
+                document.getElementById('att-controls').style.display = 'none';
+            }
+            renderAll();
+        }
+
+        function updateSyncStatus(status) {
+            const dot = document.getElementById('sync-dot');
+            const txt = document.getElementById('sync-text');
+            if(status === 'success') {
+                dot.classList.add('online');
+                txt.innerText = "SYNC ACTIVE";
+                txt.style.color = "#22c55e";
+            } else {
+                dot.classList.remove('online');
+                txt.innerText = "SYNC FAILED";
+                txt.style.color = "#ef4444";
+            }
+        }
+
+        // DATA HANDLERS
+        async function fetchData() {
+            updateSyncStatus('loading');
             try {
                 let res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, { headers: { "X-Master-Key": MASTER_KEY } });
+                if(!res.ok) throw new Error("API Error");
                 let json = await res.json();
-                data = json.record;
-                ['routine','student','teacher','notice','attendance','polls','courses','gallery'].forEach(k => { if(!data[k]) data[k]=[]; });
-                render(); document.getElementById('loader').style.display='none';
-            } catch(e) { alert("Network Error"); document.getElementById('loader').style.display='none'; }
+                
+                // Merge defaults to prevent crashes
+                let d = json.record;
+                data.routine = d.routine || [];
+                data.student = d.student || [];
+                data.teacher = d.teacher || [];
+                data.notice = d.notice || [];
+                data.attendance = d.attendance || [];
+                data.polls = d.polls || [];
+                data.resources = d.resources || [];
+                data.subjects = d.subjects || [];
+                data.marks = d.marks || {};
+                
+                renderAll();
+                updateSyncStatus('success');
+            } catch(e) { 
+                console.error(e);
+                updateSyncStatus('fail');
+            }
         }
 
-        async function save() {
-            try { await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, { method: "PUT", headers: { "Content-Type": "application/json", "X-Master-Key": MASTER_KEY }, body: JSON.stringify(data) }); render(); } catch(e) {}
+        async function saveData() {
+            updateSyncStatus('loading');
+            try {
+                await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, { 
+                    method: "PUT", 
+                    headers: { "Content-Type": "application/json", "X-Master-Key": MASTER_KEY }, 
+                    body: JSON.stringify(data) 
+                });
+                updateSyncStatus('success');
+                renderAll();
+            } catch(e) { updateSyncStatus('fail'); alert("Save Failed!"); }
         }
 
-        function render() {
-            // A. Notice Banner
-            const ban = document.getElementById('dashboard-notice');
-            if(data.notice.length) {
-                let n = data.notice[data.notice.length-1];
-                ban.innerHTML = `<div class="notice-banner"><div><span style="background:rgba(255,255,255,0.2);padding:2px 8px;border-radius:20px;font-size:0.8rem;">📅 ${n.date}</span><h3 style="margin:5px 0;">${n.title}</h3><p style="margin:0;opacity:0.9">${n.desc}</p></div></div>`;
-            } else ban.innerHTML = '';
+        // RENDERERS
+        function renderAll() {
+            // Visibility Check
+            document.querySelectorAll('.admin-form').forEach(f => {
+                if(f.parentElement.id !== 'attendance') f.style.display = isAdmin ? 'block' : 'none';
+            });
+            document.querySelectorAll('.delete-btn').forEach(b => b.style.display = isAdmin ? 'inline-block' : 'none');
 
-            // B. Routine
+            // --- ROUTINE ---
             const rBody = document.getElementById('routine-body'); rBody.innerHTML='';
-            data.routine.forEach((r,i) => rBody.innerHTML += `<tr><td style="color:var(--primary);font-weight:700">${r.day}</td><td>${r.sub}<br><small style="color:var(--text-muted)">${r.room}</small></td><td><button class="btn-sm btn-red delete-btn" onclick="del('routine',${i})">X</button></td></tr>`);
-
-            // C. Activity
-            const feed = document.getElementById('activity-feed'); feed.innerHTML='';
-            if(data.polls.length) {
-                let p = data.polls[data.polls.length-1];
-                feed.innerHTML += `<div class="card" onclick="nav('polls')" style="background:linear-gradient(135deg, #f39c12, #d35400);color:white;cursor:pointer;"><b>🗳️ Active Poll: ${p.question}</b><br><small>Tap to vote</small></div>`;
-            } else feed.innerHTML = '<p style="color:var(--text-muted)">No recent activity.</p>';
-
-            // D. Gallery (Main + Dashboard)
-            const gGrid = document.getElementById('gallery-grid');
-            const dGrid = document.getElementById('dash-gallery');
-            gGrid.innerHTML = ''; dGrid.innerHTML = '';
-            
-            data.gallery.slice().reverse().forEach((g,i) => {
-                const realIdx = data.gallery.length - 1 - i;
-                // Main Grid
-                gGrid.innerHTML += `<div class="gallery-item"><img src="${g.src}"><div class="gallery-caption">${g.cap}</div><button class="gallery-del delete-btn" onclick="del('gallery',${realIdx})">X</button></div>`;
-                // Dashboard Preview (Limit 5)
-                if(i < 5) dGrid.innerHTML += `<img src="${g.src}" style="cursor:pointer;" onclick="nav('gallery')">`;
+            data.routine.forEach((i,x) => {
+                rBody.innerHTML += `<tr><td><b>${i.day}</b></td><td>${i.sub}</td><td>${i.room}</td><td class="action-col"><button class="delete-btn" style="color:red;border:none;background:none;cursor:pointer;" onclick="del('routine',${x})">🗑️</button></td></tr>`;
             });
 
-            // Students
-            const sList = document.getElementById('student-list'); sList.innerHTML='';
-            data.student.forEach((s,i) => {
+            // --- STUDENTS ---
+            const stuL = document.getElementById('student-list'); stuL.innerHTML='';
+            data.student.forEach((s,x) => {
                 let img = s.img || 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png';
-                let btns = isAdmin ? `<div><button class="btn-sm" style="background:#f59e0b;color:white;" onclick="editS(${i})"><i class="fa-solid fa-pen"></i></button><button class="btn-sm btn-red delete-btn" onclick="del('student',${i})"><i class="fa-solid fa-trash"></i></button></div>` : '';
-                sList.innerHTML += `<div class="card" style="display:flex;align-items:center;justify-content:space-between;"><div style="display:flex;align-items:center;gap:15px;"><img src="${img}" style="width:45px;height:45px;border-radius:50%;object-fit:cover;"><div><div style="font-weight:700;">${s.name}</div><div style="font-size:0.85rem;color:var(--text-muted);">ID: ${s.id}</div><div onclick="copy('${s.phone}')" style="color:var(--accent);font-size:0.85rem;cursor:pointer;">📞 ${s.phone}</div></div></div>${btns}</div>`;
+                let btns = isAdmin ? `<button onclick="del('student',${x})" style="background:#ef4444; color:white; border:none; padding:5px 10px; border-radius:4px; float:right;">Delete</button>` : '';
+                stuL.innerHTML += `<div class="card" style="display:flex; align-items:center; gap:15px;">
+                    <img src="${img}" style="width:50px; height:50px; border-radius:50%; object-fit:cover; border:2px solid var(--active-bg);">
+                    <div style="flex:1;">
+                        <h4 style="margin:0;">${s.name}</h4>
+                        <small style="color:#64748b;">ID: ${s.id} | ${s.phone}</small>
+                    </div>
+                    ${btns}
+                </div>`;
             });
 
-            // Attendance Grid
-            const attGrid = document.getElementById('att-grid');
-            if(attGrid.innerHTML === '') {
-                data.student.forEach(s => attGrid.innerHTML += `<div id="att-p-${s.id}" style="background:var(--bg-body);border:1px solid var(--border);padding:5px;border-radius:5px;text-align:center;cursor:pointer;font-size:0.8rem;" onclick="toggleP('${s.id}')">${s.name}</div>`);
+            // --- ATTENDANCE GRID ---
+            const grid = document.getElementById('attendance-grid');
+            if(grid.innerHTML === '') {
+                data.student.forEach(s => {
+                    grid.innerHTML += `<div id="att-stu-${s.id}" class="att-student" onclick="toggleAttStatus('${s.id}')">${s.name}<br><small>${s.id}</small></div>`;
+                });
             }
 
-            // Other Modules (Simplified)
-            const cList=document.getElementById('course-list'); cList.innerHTML=''; data.courses.forEach((c,i)=>cList.innerHTML+=`<div class="card"><b>${c.name}</b> (${c.code}) <a href="${c.link}" target="_blank" style="float:right;color:var(--primary);">Link</a> <button class="btn-sm btn-red delete-btn" onclick="del('courses',${i})">X</button></div>`);
-            const tList=document.getElementById('teacher-list'); tList.innerHTML=''; data.teacher.forEach((t,i)=>tList.innerHTML+=`<div class="card"><b>${t.name}</b><br>${t.post}<button class="btn-sm btn-red delete-btn" onclick="del('teacher',${i})" style="float:right">X</button></div>`);
-            const nList=document.getElementById('notice-list'); nList.innerHTML=''; data.notice.slice().reverse().forEach((n,i)=>nList.innerHTML+=`<div class="card" style="border-left:4px solid var(--accent)"><b>${n.title}</b><br>${n.desc}<button class="btn-sm btn-red delete-btn" onclick="del('notice',${data.notice.length-1-i})" style="float:right">X</button></div>`);
-            const pList=document.getElementById('poll-list'); pList.innerHTML=''; data.polls.slice().reverse().forEach((p,i)=>{let idx=data.polls.length-1-i; let opts=p.options.map((o,oi)=>`<div style="background:var(--bg-body);padding:8px;margin:5px 0;border-radius:6px;cursor:pointer;" onclick="vote(${idx},${oi})">${o.text} (${o.votes})</div>`).join(''); pList.innerHTML+=`<div class="card"><b>${p.question}</b>${opts}<button class="btn-sm btn-red delete-btn" onclick="del('polls',${idx})">End</button></div>`;});
-            const attH=document.getElementById('att-history'); attH.innerHTML=''; data.attendance.slice().reverse().forEach((a,i)=>{let idx=data.attendance.length-1-i; attH.innerHTML+=`<div class="card"><b>${a.subject}</b> - ${a.date} (${a.ids.length}) <button class="btn-sm btn-red delete-btn" onclick="del('attendance',${idx})" style="float:right">X</button></div>`;});
+            // --- ATTENDANCE HISTORY ---
+            const attH = document.getElementById('attendance-history'); attH.innerHTML='';
+            data.attendance.slice().reverse().forEach((a,i) => {
+                let ri = data.attendance.length - 1 - i;
+                attH.innerHTML += `<div class="card" style="padding:15px; border-left:4px solid var(--active-bg);">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <div>
+                            <b>${a.subject}</b> <small>(${a.date})</small><br>
+                            <small>Present: ${a.presentIDs.length} / ${data.student.length}</small>
+                        </div>
+                        <div>
+                            <button onclick="generatePDF(${ri})" style="background:#334155; color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer;">PDF</button>
+                            ${isAdmin ? `<button onclick="del('attendance',${ri})" style="color:red; background:none; border:none; cursor:pointer;">🗑️</button>` : ''}
+                        </div>
+                    </div>
+                </div>`;
+            });
+            
+            // --- NOTICES ---
+            const nList = document.getElementById('notice-list'); nList.innerHTML = '';
+            data.notice.slice().reverse().forEach((n, x) => {
+                nList.innerHTML += `<div class="card" style="border-left: 4px solid #3b82f6;">
+                    <b>${n.title}</b> <span style="font-size:0.75rem; float:right; color:#888;">${n.date}</span>
+                    <p style="margin:5px 0 0; font-size:0.9rem; color:#475569;">${n.desc}</p>
+                    ${isAdmin ? `<button onclick="del('notice',${data.notice.length-1-x})" style="color:red; background:none; border:none; cursor:pointer; margin-top:5px;">Delete</button>` : ''}
+                </div>`;
+            });
+            
+            // --- DASHBOARD FEED ---
+            const feed = document.getElementById('activity-feed'); feed.innerHTML='';
+            if(data.notice.length) {
+                feed.innerHTML += `<div style="background:#dbeafe; padding:15px; border-radius:8px; border:1px solid #93c5fd; color:#1e40af; margin-bottom:15px;">
+                    📢 <b>Latest:</b> ${data.notice[data.notice.length-1].title}
+                </div>`;
+            }
 
-            checkAdmin();
+            // Render others (Teachers, Resources, Polls) - Minimal version
+            const tL=document.getElementById('teacher-list'); tL.innerHTML=''; data.teacher.forEach((t,x)=>tL.innerHTML+=`<div class="card"><b>${t.name}</b><br><small>${t.post}</small>${isAdmin?`<button onclick="del('teacher',${x})" style="float:right;color:red;background:none;border:none;">Del</button>`:''}</div>`);
+            
+            const rL=document.getElementById('resource-list'); rL.innerHTML=''; data.resources.forEach((r,x)=>rL.innerHTML+=`<div class="card"><a href="${r.url}" target="_blank" style="text-decoration:none; color:#2563eb; font-weight:bold;">📄 ${r.title}</a> ${isAdmin?`<button onclick="del('resources',${x})" style="float:right;color:red;background:none;border:none;">Del</button>`:''}</div>`);
         }
 
-        // --- ACTIONS ---
-        function toggleAdmin(){ isAdmin=!isAdmin; checkAdmin(); }
-        function checkAdmin(){
-            document.querySelectorAll('.admin-form').forEach(e => e.style.display = isAdmin ? 'block' : 'none');
-            document.querySelectorAll('.delete-btn').forEach(e => e.style.display = isAdmin ? 'inline-flex' : 'none');
-            document.querySelectorAll('.gallery-del').forEach(e => e.style.display = isAdmin ? 'flex' : 'none');
-            const btn = document.getElementById('admin-btn');
-            btn.innerHTML = isAdmin ? '<i class="fa-solid fa-unlock"></i> Logout' : '<i class="fa-solid fa-lock"></i> Admin';
-            btn.style.color = isAdmin ? '#ef4444' : 'var(--sidebar-text)';
+        // LOGIC
+        function toggleAttStatus(id) {
+            const el = document.getElementById('att-stu-'+id);
+            if(tempAttendance.has(id)) { tempAttendance.delete(id); el.classList.remove('present'); }
+            else { tempAttendance.add(id); el.classList.add('present'); }
         }
-
-        function v(id){ return document.getElementById(id).value; }
+        function selectAllAtt(state) {
+            data.student.forEach(s => {
+                const el = document.getElementById('att-stu-'+s.id);
+                if(state) { tempAttendance.add(s.id); el.classList.add('present'); }
+                else { tempAttendance.delete(s.id); el.classList.remove('present'); }
+            });
+        }
+        function saveAttendance() {
+            const d = document.getElementById('att-date').value;
+            const s = document.getElementById('att-subject').value;
+            if(!d || !s) return alert("Date & Subject Needed!");
+            data.attendance.push({ date: d, subject: s, presentIDs: Array.from(tempAttendance) });
+            tempAttendance.clear();
+            document.querySelectorAll('.att-student').forEach(e => e.classList.remove('present'));
+            saveData();
+        }
+        function addRoutine(){ data.routine.push({day:document.getElementById('r-day').value, sub:document.getElementById('r-sub').value, room:document.getElementById('r-room').value}); saveData(); }
+        function addSubject(){ data.subjects.push({name:document.getElementById('sub-name').value, code:document.getElementById('sub-code').value, link:document.getElementById('sub-link').value}); saveData(); }
+        function addResource(){ data.resources.push({title:document.getElementById('res-title').value, url:document.getElementById('res-url').value}); saveData(); }
+        function addTeacher(){ data.teacher.push({name:document.getElementById('t-name').value, post:document.getElementById('t-post').value, phone:document.getElementById('t-phone').value}); saveData(); }
+        function addNotice(){ data.notice.push({date:document.getElementById('n-date').value, title:document.getElementById('n-title').value, desc:document.getElementById('n-desc').value}); saveData(); }
         
-        function addStudent(){
-            let n=v('s-name'), i=v('s-id'), d=v('s-dip'), p=v('s-phone'), f=document.getElementById('s-img').files[0];
+        function handleStudentSubmit() {
+            const n=document.getElementById('s-name').value, i=document.getElementById('s-id').value, p=document.getElementById('s-phone').value, f=document.getElementById('s-img-file').files[0];
             if(!n) return alert("Name?");
-            const commit = (img) => {
-                if(editIdx > -1) data.student[editIdx] = {name:n, id:i, dip:d, phone:p, img:img || data.student[editIdx].img};
-                else data.student.push({name:n, id:i, dip:d, phone:p, img:img});
-                resetForm(); save();
-            };
-            if(f){ const r=new FileReader(); r.onload=(e)=>commit(e.target.result); r.readAsDataURL(f); } else commit('');
+            const saveS = (img) => { data.student.push({name:n,id:i,phone:p,img:img}); document.getElementById('s-name').value=''; saveData(); };
+            if(f){const r=new FileReader(); r.onload=(e)=>saveS(e.target.result); r.readAsDataURL(f);} else saveS('');
         }
-        function editS(i) { let s = data.student[i]; document.getElementById('s-name').value=s.name; document.getElementById('s-id').value=s.id; document.getElementById('s-dip').value=s.dip; document.getElementById('s-phone').value=s.phone; editIdx=i; document.getElementById('stu-btn').innerText="Update"; document.getElementById('student-form').scrollIntoView(); }
-        function resetForm(){ document.querySelectorAll('input').forEach(i=>i.value=''); editIdx=-1; document.getElementById('stu-btn').innerText="Add"; }
-
-        // Gallery Logic
-        function addPhoto() {
-            const f = document.getElementById('g-upload').files[0];
-            const c = v('g-caption');
-            if(f) {
-                const r = new FileReader();
-                r.onload = (e) => {
-                    data.gallery.push({src: e.target.result, cap: c});
-                    save();
-                    document.getElementById('g-upload').value = '';
-                    document.getElementById('g-caption').value = '';
-                };
-                r.readAsDataURL(f);
-            } else alert("Select Image");
-        }
-
-        let presentSet = new Set();
-        function toggleP(id) { if(presentSet.has(id)){ presentSet.delete(id); document.getElementById('att-p-'+id).style.background=''; document.getElementById('att-p-'+id).style.color=''; } else { presentSet.add(id); document.getElementById('att-p-'+id).style.background='#10b981'; document.getElementById('att-p-'+id).style.color='white'; } }
-        function saveAttendance() { if(!v('att-date')) return alert("Date?"); data.attendance.push({date:v('att-date'), subject:v('att-sub'), ids:Array.from(presentSet)}); presentSet.clear(); save(); }
-
-        function addRoutine(){ if(v('r-day')) { data.routine.push({day:v('r-day'),sub:v('r-sub'),room:v('r-room')}); save(); } }
-        function addSubject(){ if(v('sub-name')) { data.courses.push({name:v('sub-name'),code:v('sub-code'),link:v('sub-link')}); save(); } }
-        function addTeacher(){ if(v('t-name')) { data.teacher.push({name:v('t-name'),post:v('t-post'),phone:v('t-phone')}); save(); } }
-        function addNotice(){ if(v('n-title')) { data.notice.push({date:v('n-date'),title:v('n-title'),desc:v('n-desc')}); save(); } }
-        function addPoll(){ if(v('p-q')) { data.polls.push({question:v('p-q'), options:v('p-o').split(',').map(t=>({text:t.trim(),votes:0}))}); save(); } }
-        function vote(pi,oi){ if(localStorage.getItem('v_'+pi)) return alert("Voted!"); data.polls[pi].options[oi].votes++; localStorage.setItem('v_'+pi,1); save(); }
         
-        function del(k,i) { if(confirm("Delete?")) { data[k].splice(i,1); save(); } }
-        function copy(t) { navigator.clipboard.writeText(t); alert("Copied"); }
-        function pdf(id) { const e=document.getElementById(id); html2pdf().from(e).save('doc.pdf'); }
+        function del(key, idx) { if(confirm("Delete?")) { data[key].splice(idx,1); saveData(); } }
 
-        init();
+        function generatePDF(i) {
+            const r = data.attendance[i];
+            const d = document.createElement('div');
+            d.innerHTML = `<h2>Attendance: ${r.subject}</h2><p>Date: ${r.date}</p><hr><ul>${data.student.map(s => `<li style="color:${r.presentIDs.includes(s.id)?'green':'red'}">${s.name} (${s.id}) - ${r.presentIDs.includes(s.id)?'P':'A'}</li>`).join('')}</ul>`;
+            html2pdf().from(d).save(`Att_${r.subject}.pdf`);
+        }
+
+        // INIT
+        fetchData();
     </script>
 </body>
 </html>
